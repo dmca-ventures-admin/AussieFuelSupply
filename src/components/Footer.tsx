@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Footer() {
   const dataSources = [
     {
@@ -112,6 +114,47 @@ export default function Footer() {
               explainer.
             </p>
           </div>
+        </div>
+
+        {/* Feedback & Bug Report */}
+        <div className="flex items-center justify-center gap-3 flex-wrap mb-10">
+          <span className="text-sm text-slate-400">Have thoughts?</span>
+          <Link
+            href="/feedback"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-400 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 rounded-lg px-3 py-1.5 transition-colors duration-200 hover:bg-blue-500/10"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Give Feedback
+          </Link>
+          <Link
+            href="/bug"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 rounded-lg px-3 py-1.5 transition-colors duration-200 hover:bg-red-500/10"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Report a Bug
+          </Link>
         </div>
 
         {/* Bottom bar */}
