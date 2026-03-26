@@ -1,0 +1,76 @@
+{
+  "suppliers": [
+    {
+      "country": "South Korea",
+      "flag": "🇰🇷",
+      "share_pct": 30,
+      "role": "Major refining hub — ~30% of Australia's petrol imports",
+      "gasoline_stocks_ml": 2850,
+      "diesel_stocks_ml": 3200,
+      "refinery_utilisation_pct": 78,
+      "status": "amber",
+      "note": "Utilisation down from 85% as crude deliveries slow"
+    },
+    {
+      "country": "Singapore",
+      "flag": "🇸🇬",
+      "share_pct": 25,
+      "role": "Major trading hub & refiner",
+      "gasoline_stocks_ml": 1200,
+      "diesel_stocks_ml": 1800,
+      "refinery_utilisation_pct": 82,
+      "status": "amber",
+      "note": "Product stocks below 5-year average"
+    },
+    {
+      "country": "Malaysia",
+      "flag": "🇲🇾",
+      "share_pct": 15,
+      "role": "Crude oil supplier + some refined products",
+      "gasoline_stocks_ml": 800,
+      "diesel_stocks_ml": 950,
+      "refinery_utilisation_pct": 75,
+      "status": "green",
+      "note": "Less dependent on Hormuz crude"
+    },
+    {
+      "country": "Taiwan",
+      "flag": "🇹🇼",
+      "share_pct": 10,
+      "role": "Refined product exports",
+      "gasoline_stocks_ml": 600,
+      "diesel_stocks_ml": 700,
+      "refinery_utilisation_pct": 80,
+      "status": "green",
+      "note": "Stable output, diversified crude sources"
+    },
+    {
+      "country": "India",
+      "flag": "🇮🇳",
+      "share_pct": 5,
+      "role": "Emerging re-exporter of Russian-origin crude",
+      "gasoline_stocks_ml": null,
+      "diesel_stocks_ml": null,
+      "refinery_utilisation_pct": 88,
+      "status": "green",
+      "note": "Increasing exports as Russian crude remains discounted"
+    }
+  ],
+  "jodi_last_updated": "2026-02-20",
+  "domestic_refineries": [
+    {
+      "name": "Ampol Lytton",
+      "location": "Brisbane, QLD",
+      "capacity_bpd": 109000,
+      "status": "operational",
+      "note": "Operating at full capacity"
+    },
+    {
+      "name": "Viva Geelong",
+      "location": "Geelong, VIC",
+      "capacity_bpd": 120000,
+      "status": "operational",
+      "note": "Operating at full capacity"
+    }
+  ]
+}

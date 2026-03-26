@@ -1,0 +1,36 @@
+{
+  "snapshot_date": "2026-03-22",
+  "domestic": {
+    "petrol_days_supply": 38,
+    "petrol_litres_held": 1644000000,
+    "petrol_pct_above_mso": 78,
+    "diesel_days_supply": 30,
+    "diesel_litres_held": 2804000000,
+    "diesel_pct_above_mso": 18,
+    "emergency_release_authorised_litres": 762000000,
+    "emergency_release_drawn_petrol_days": 5,
+    "emergency_release_drawn_diesel_days": 6,
+    "domestic_refineries": 2,
+    "domestic_refinery_share_pct": 20,
+    "iea_obligation_days": 90,
+    "iea_actual_days": 55
+  },
+  "global": {
+    "brent_crude_usd": 96.68,
+    "hormuz_status": "restricted",
+    "iea_release_mbl": 400,
+    "iea_committed_mbl": 422
+  },
+  "retail": {
+    "avg_petrol_price_cpl": 243.4,
+    "avg_diesel_price_cpl": 260.0,
+    "nsw_stations_no_diesel": 107,
+    "nsw_stations_completely_dry": 42,
+    "demand_spike_pct_some_areas": 50
+  },
+  "upstream_suppliers": {
+    "note": "Australia imports ~90% of refined fuel",
+    "top_sources": ["South Korea", "Singapore", "Malaysia", "Taiwan"],
+    "ships_cancelled_april": 6
+  }
+}

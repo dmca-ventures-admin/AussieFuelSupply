@@ -1,0 +1,31 @@
+{
+  "brent_30d": [
+    { "date": "2026-02-20", "price": 82.10 },
+    { "date": "2026-02-21", "price": 83.45 },
+    { "date": "2026-02-24", "price": 84.20 },
+    { "date": "2026-02-25", "price": 85.60 },
+    { "date": "2026-02-26", "price": 86.30 },
+    { "date": "2026-02-27", "price": 87.15 },
+    { "date": "2026-02-28", "price": 88.40 },
+    { "date": "2026-03-03", "price": 89.20 },
+    { "date": "2026-03-04", "price": 88.90 },
+    { "date": "2026-03-05", "price": 90.10 },
+    { "date": "2026-03-06", "price": 91.55 },
+    { "date": "2026-03-07", "price": 92.30 },
+    { "date": "2026-03-10", "price": 91.80 },
+    { "date": "2026-03-11", "price": 93.20 },
+    { "date": "2026-03-12", "price": 94.10 },
+    { "date": "2026-03-13", "price": 93.60 },
+    { "date": "2026-03-14", "price": 94.80 },
+    { "date": "2026-03-17", "price": 95.20 },
+    { "date": "2026-03-18", "price": 95.90 },
+    { "date": "2026-03-19", "price": 96.10 },
+    { "date": "2026-03-20", "price": 96.50 },
+    { "date": "2026-03-21", "price": 96.68 }
+  ],
+  "events": [
+    { "date": "2026-02-28", "label": "Hormuz transit restricted" },
+    { "date": "2026-03-05", "label": "IEA announces 400M bbl release" },
+    { "date": "2026-03-14", "label": "Australia activates emergency reserves" }
+  ]
+}

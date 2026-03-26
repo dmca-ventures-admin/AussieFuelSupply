@@ -1,0 +1,38 @@
+{
+  "petrol_30d": [
+    { "date": "2026-02-20", "price": 198.5 },
+    { "date": "2026-02-23", "price": 201.2 },
+    { "date": "2026-02-26", "price": 205.8 },
+    { "date": "2026-03-01", "price": 210.4 },
+    { "date": "2026-03-04", "price": 215.6 },
+    { "date": "2026-03-07", "price": 220.1 },
+    { "date": "2026-03-10", "price": 225.8 },
+    { "date": "2026-03-13", "price": 230.2 },
+    { "date": "2026-03-16", "price": 234.6 },
+    { "date": "2026-03-19", "price": 239.8 },
+    { "date": "2026-03-22", "price": 243.4 }
+  ],
+  "diesel_30d": [
+    { "date": "2026-02-20", "price": 210.0 },
+    { "date": "2026-02-23", "price": 214.5 },
+    { "date": "2026-02-26", "price": 219.8 },
+    { "date": "2026-03-01", "price": 225.2 },
+    { "date": "2026-03-04", "price": 230.6 },
+    { "date": "2026-03-07", "price": 236.1 },
+    { "date": "2026-03-10", "price": 241.4 },
+    { "date": "2026-03-13", "price": 246.8 },
+    { "date": "2026-03-16", "price": 251.2 },
+    { "date": "2026-03-19", "price": 256.0 },
+    { "date": "2026-03-22", "price": 260.0 }
+  ],
+  "outages_by_state": {
+    "NSW": { "no_diesel": 107, "completely_dry": 42 },
+    "VIC": { "no_diesel": 68, "completely_dry": 23 },
+    "QLD": { "no_diesel": 89, "completely_dry": 31 },
+    "SA":  { "no_diesel": 34, "completely_dry": 12 },
+    "WA":  { "no_diesel": 45, "completely_dry": 15 },
+    "TAS": { "no_diesel": 18, "completely_dry": 8 },
+    "NT":  { "no_diesel": 12, "completely_dry": 6 },
+    "ACT": { "no_diesel": 5, "completely_dry": 2 }
+  }
+}
