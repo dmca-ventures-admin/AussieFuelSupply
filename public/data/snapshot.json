@@ -16,9 +16,9 @@
     "iea_actual_days": 55
   },
   "global": {
-    "brent_crude_usd": 96.68,
+    "brent_crude_usd": 112.57,
     "brent_source": "ICE Futures via Investing.com",
-    "brent_as_of": "2026-03-25",
+    "brent_as_of": "2026-03-29",
     "hormuz_status": "restricted",
     "hormuz_source": "Reuters / CENTCOM",
     "hormuz_as_of": "2026-03-28",
@@ -40,7 +40,13 @@
   },
   "upstream_suppliers": {
     "note": "Australia imports ~90% of refined fuel",
-    "top_sources": ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"],
+    "top_sources": [
+      "South Korea",
+      "Singapore",
+      "Malaysia",
+      "Taiwan",
+      "India"
+    ],
     "ships_cancelled": 6,
     "ships_normal_monthly": 81,
     "ships_cancelled_pct": 7.4,
