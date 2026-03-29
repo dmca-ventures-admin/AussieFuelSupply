@@ -1,0 +1,84 @@
+name: Update Retail Fuel Prices
+
+on:
+  schedule:
+    # Run daily at 6am AEST (8pm UTC previous day)
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-retail-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch NSW FuelCheck prices
+        env:
+          NSW_FUEL_API_KEY: ${{ secrets.NSW_FUEL_API_KEY }}
+        run: |
+          set -e
+          TODAY=$(date -u +%Y-%m-%d)
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S")
+
+          if [ -z "$NSW_FUEL_API_KEY" ]; then
+            echo "NSW_FUEL_API_KEY not set, skipping"
+            exit 0
+          fi
+
+          # Fetch all current prices from NSW FuelCheck
+          RESPONSE=$(curl -s \
+            -H "apikey: $NSW_FUEL_API_KEY" \
+            -H "Content-Type: application/json" \
+            -H "transactionid: afs-gh-$(date +%s)" \
+            -H "requesttimestamp: $TIMESTAMP" \
+            "https://api.onegov.nsw.gov.au/FuelCheckApp/v2/fuel/prices" || echo '{}')
+
+          # Calculate averages using jq
+          # U91 = Unleaded 91, DL = Diesel
+          PETROL_AVG=$(echo "$RESPONSE" | jq '[.prices[] | select(.fueltype == "U91" or .fueltype == "E10" or .fueltype == "P95" or .fueltype == "P98") | .price | tonumber] | if length > 0 then (add / length * 10 | round / 10) else null end')
+          DIESEL_AVG=$(echo "$RESPONSE" | jq '[.prices[] | select(.fueltype == "DL" or .fueltype == "PDL") | .price | tonumber] | if length > 0 then (add / length * 10 | round / 10) else null end')
+
+          echo "NSW Petrol avg: ${PETROL_AVG}c/L"
+          echo "NSW Diesel avg: ${DIESEL_AVG}c/L"
+
+          if [ "$PETROL_AVG" = "null" ] && [ "$DIESEL_AVG" = "null" ]; then
+            echo "No price data returned, skipping"
+            exit 0
+          fi
+
+          # Update retail-prices.json — append today and keep last 30 entries
+          if [ "$PETROL_AVG" != "null" ]; then
+            jq --arg date "$TODAY" --argjson price "$PETROL_AVG" '
+              .petrol_30d += [{"date": $date, "price": $price}] |
+              .petrol_30d = (.petrol_30d | unique_by(.date) | sort_by(.date) | .[-30:])
+            ' public/data/retail-prices.json > /tmp/retail-prices.json
+            mv /tmp/retail-prices.json public/data/retail-prices.json
+          fi
+
+          if [ "$DIESEL_AVG" != "null" ]; then
+            jq --arg date "$TODAY" --argjson price "$DIESEL_AVG" '
+              .diesel_30d += [{"date": $date, "price": $price}] |
+              .diesel_30d = (.diesel_30d | unique_by(.date) | sort_by(.date) | .[-30:])
+            ' public/data/retail-prices.json > /tmp/retail-prices.json
+            mv /tmp/retail-prices.json public/data/retail-prices.json
+          fi
+
+          # Update snapshot.json prices
+          jq --argjson petrol "${PETROL_AVG:-null}" --argjson diesel "${DIESEL_AVG:-null}" --arg date "$TODAY" '
+            (if $petrol then .retail.avg_petrol_price_cpl = $petrol | .retail.petrol_price_as_of = $date else . end) |
+            (if $diesel then .retail.avg_diesel_price_cpl = $diesel | .retail.diesel_price_as_of = $date else . end) |
+            .snapshot_date = $date
+          ' public/data/snapshot.json > /tmp/snapshot.json
+          mv /tmp/snapshot.json public/data/snapshot.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/retail-prices.json public/data/snapshot.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "data: update retail fuel prices [$(date -u +%Y-%m-%d)]"
+          git push

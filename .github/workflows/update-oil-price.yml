@@ -1,0 +1,60 @@
+name: Update Oil Price Data
+
+on:
+  schedule:
+    # Run daily at 7pm AEST (8am UTC) — after US market close
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-oil-price:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Brent Crude price
+        env:
+          OIL_PRICE_API_TOKEN: ${{ secrets.OIL_PRICE_API_TOKEN }}
+        run: |
+          set -e
+
+          # Fetch latest price
+          RESPONSE=$(curl -s -H "Authorization: Token $OIL_PRICE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            "https://api.oilpriceapi.com/v1/prices/latest" || echo '{}')
+
+          PRICE=$(echo "$RESPONSE" | jq -r '.data.price.value // .data.prices[0].value // empty')
+          TODAY=$(date -u +%Y-%m-%d)
+
+          if [ -z "$PRICE" ]; then
+            echo "Failed to fetch oil price, skipping update"
+            exit 0
+          fi
+
+          echo "Brent crude: \$$PRICE on $TODAY"
+
+          # Update oil-prices.json — append today's price and keep last 30 entries
+          jq --arg date "$TODAY" --argjson price "$PRICE" '
+            .brent_30d += [{"date": $date, "price": $price}] |
+            .brent_30d = (.brent_30d | unique_by(.date) | sort_by(.date) | .[-30:])
+          ' public/data/oil-prices.json > /tmp/oil-prices.json
+          mv /tmp/oil-prices.json public/data/oil-prices.json
+
+          # Update snapshot.json brent price
+          jq --argjson price "$PRICE" --arg date "$TODAY" '
+            .global.brent_crude_usd = $price |
+            .global.brent_as_of = $date
+          ' public/data/snapshot.json > /tmp/snapshot.json
+          mv /tmp/snapshot.json public/data/snapshot.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/oil-prices.json public/data/snapshot.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "data: update Brent crude price [$(date -u +%Y-%m-%d)]"
+          git push
