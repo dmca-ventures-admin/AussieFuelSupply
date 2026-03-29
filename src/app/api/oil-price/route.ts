@@ -66,7 +66,10 @@ export async function GET() {
     }
 
     const data = await res.json();
-    const brentPrice = data?.data?.price?.value ?? data?.data?.prices?.[0]?.value ?? null;
+    const brentPrice =
+      typeof data?.data?.price === "number"
+        ? data.data.price
+        : data?.data?.price?.value ?? data?.data?.prices?.[0]?.value ?? null;
 
     // Update cache
     cachedPrice = {

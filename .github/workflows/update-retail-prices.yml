@@ -19,9 +19,9 @@ jobs:
         env:
           NSW_FUEL_API_KEY: ${{ secrets.NSW_FUEL_API_KEY }}
         run: |
-          set -e
+          set -eo pipefail
           TODAY=$(date -u +%Y-%m-%d)
-          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S")
+          TIMESTAMP=$(date -u +"%d/%m/%Y %H:%M:%S")
 
           if [ -z "$NSW_FUEL_API_KEY" ]; then
             echo "NSW_FUEL_API_KEY not set, skipping"
@@ -29,23 +29,36 @@ jobs:
           fi
 
           # Fetch all current prices from NSW FuelCheck
-          RESPONSE=$(curl -s \
+          RESPONSE=$(curl -sf \
             -H "apikey: $NSW_FUEL_API_KEY" \
             -H "Content-Type: application/json" \
             -H "transactionid: afs-gh-$(date +%s)" \
             -H "requesttimestamp: $TIMESTAMP" \
-            "https://api.onegov.nsw.gov.au/FuelCheckApp/v2/fuel/prices" || echo '{}')
+            "https://api.onegov.nsw.gov.au/FuelPriceCheck/v2/fuel/prices" 2>/dev/null || echo '{}')
 
-          # Calculate averages using jq
-          # U91 = Unleaded 91, DL = Diesel
-          PETROL_AVG=$(echo "$RESPONSE" | jq '[.prices[] | select(.fueltype == "U91" or .fueltype == "E10" or .fueltype == "P95" or .fueltype == "P98") | .price | tonumber] | if length > 0 then (add / length * 10 | round / 10) else null end')
-          DIESEL_AVG=$(echo "$RESPONSE" | jq '[.prices[] | select(.fueltype == "DL" or .fueltype == "PDL") | .price | tonumber] | if length > 0 then (add / length * 10 | round / 10) else null end')
+          # Check if we got an error or empty response
+          HAS_ERROR=$(echo "$RESPONSE" | jq -r '.errorDetails // .error // empty' 2>/dev/null)
+          if [ -n "$HAS_ERROR" ] || [ "$RESPONSE" = "{}" ]; then
+            echo "FuelCheck API returned error or empty response, skipping: $HAS_ERROR"
+            exit 0
+          fi
+
+          # Calculate averages using jq — handle both array-of-objects and nested formats
+          PETROL_AVG=$(echo "$RESPONSE" | jq '
+            [.. | objects | select(.fueltype? // .FuelType? | . == "U91" or . == "E10" or . == "P95" or . == "P98") | (.price? // .Price? | tonumber)] |
+            if length > 0 then (add / length * 10 | round / 10) else null end
+          ' 2>/dev/null || echo "null")
+
+          DIESEL_AVG=$(echo "$RESPONSE" | jq '
+            [.. | objects | select(.fueltype? // .FuelType? | . == "DL" or . == "PDL") | (.price? // .Price? | tonumber)] |
+            if length > 0 then (add / length * 10 | round / 10) else null end
+          ' 2>/dev/null || echo "null")
 
           echo "NSW Petrol avg: ${PETROL_AVG}c/L"
           echo "NSW Diesel avg: ${DIESEL_AVG}c/L"
 
           if [ "$PETROL_AVG" = "null" ] && [ "$DIESEL_AVG" = "null" ]; then
-            echo "No price data returned, skipping"
+            echo "No valid price data returned, skipping update"
             exit 0
           fi
 

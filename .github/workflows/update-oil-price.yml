@@ -26,7 +26,7 @@ jobs:
             -H "Content-Type: application/json" \
             "https://api.oilpriceapi.com/v1/prices/latest" || echo '{}')
 
-          PRICE=$(echo "$RESPONSE" | jq -r '.data.price.value // .data.prices[0].value // empty')
+          PRICE=$(echo "$RESPONSE" | jq -r 'if .data.price | type == "number" then .data.price else (.data.price.value // .data.prices[0].value // empty) end')
           TODAY=$(date -u +%Y-%m-%d)
 
           if [ -z "$PRICE" ]; then
