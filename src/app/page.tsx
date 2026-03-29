@@ -2,74 +2,115 @@
 
 import { useEffect, useState } from "react";
 import HeroBanner from "@/components/HeroBanner";
-import DomesticStocks from "@/components/DomesticStocks";
-import SupplyChainMap from "@/components/SupplyChainMap";
-import GlobalDrivers from "@/components/GlobalDrivers";
-import RetailImpact from "@/components/RetailImpact";
-import Scenarios from "@/components/Scenarios";
+import Layer1HereAndNow from "@/components/Layer1HereAndNow";
+import ConnectorOneTwo from "@/components/ConnectorOneTwo";
+import Layer2SupplyChain from "@/components/Layer2SupplyChain";
+import ConnectorTwoThree from "@/components/ConnectorTwoThree";
+import Layer3Global from "@/components/Layer3Global";
+import Layer4Understanding from "@/components/Layer4Understanding";
 import Footer from "@/components/Footer";
-import type { Snapshot, StocksHistory, OilPrices, RetailPrices, SuppliersData } from "@/lib/types";
+import type {
+  Snapshot,
+  StocksHistory,
+  OilPrices,
+  RetailPrices,
+  SuppliersData,
+  OutagesData,
+  ImportSourcesData,
+  ShippingData,
+  TimelineData,
+  PriceDecompositionData,
+  RefineryHistory,
+  GlobalStatusData,
+} from "@/lib/types";
+
+interface DashboardData {
+  snapshot: Snapshot;
+  stocksHistory: StocksHistory;
+  oilPrices: OilPrices;
+  retailPrices: RetailPrices;
+  suppliers: SuppliersData;
+  outages: OutagesData;
+  importSources: ImportSourcesData;
+  shipping: ShippingData;
+  timeline: TimelineData;
+  priceDecomposition: PriceDecompositionData;
+  refineryHistory: RefineryHistory;
+  globalStatus: GlobalStatusData;
+}
 
 export default function Home() {
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
-  const [stocksHistory, setStocksHistory] = useState<StocksHistory | null>(null);
-  const [oilPrices, setOilPrices] = useState<OilPrices | null>(null);
-  const [retailPrices, setRetailPrices] = useState<RetailPrices | null>(null);
-  const [suppliers, setSuppliers] = useState<SuppliersData | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [liveBrentPrice, setLiveBrentPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch all static data in parallel
-        const [snapshotRes, stocksRes, oilRes, retailRes, suppliersRes] = await Promise.all([
-          fetch("/data/snapshot.json"),
-          fetch("/data/stocks-history.json"),
-          fetch("/data/oil-prices.json"),
-          fetch("/data/retail-prices.json"),
-          fetch("/data/suppliers.json"),
-        ]);
+        const files = [
+          "snapshot.json",
+          "stocks-history.json",
+          "oil-prices.json",
+          "retail-prices.json",
+          "suppliers.json",
+          "outages.json",
+          "import-sources.json",
+          "shipping.json",
+          "timeline.json",
+          "price-decomposition.json",
+          "refinery-history.json",
+          "global-status.json",
+        ];
+        const responses = await Promise.all(files.map((f) => fetch(`/data/${f}`)));
+        const [
+          snapshot,
+          stocksHistory,
+          oilPrices,
+          retailPrices,
+          suppliers,
+          outages,
+          importSources,
+          shipping,
+          timeline,
+          priceDecomposition,
+          refineryHistory,
+          globalStatus,
+        ] = await Promise.all(responses.map((r) => r.json()));
 
-        const [snapshotData, stocksData, oilData, retailData, suppliersData] = await Promise.all([
-          snapshotRes.json(),
-          stocksRes.json(),
-          oilRes.json(),
-          retailRes.json(),
-          suppliersRes.json(),
-        ]);
-
-        setSnapshot(snapshotData);
-        setStocksHistory(stocksData);
-        setOilPrices(oilData);
-        setRetailPrices(retailData);
-        setSuppliers(suppliersData);
+        setData({
+          snapshot,
+          stocksHistory,
+          oilPrices,
+          retailPrices,
+          suppliers,
+          outages,
+          importSources,
+          shipping,
+          timeline,
+          priceDecomposition,
+          refineryHistory,
+          globalStatus,
+        });
       } catch (error) {
         console.error("Failed to load data:", error);
       } finally {
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
 
-  // Fetch live oil price from our API route
   useEffect(() => {
     async function fetchLivePrice() {
       try {
         const res = await fetch("/api/oil-price");
-        const data = await res.json();
-        if (data.price) {
-          setLiveBrentPrice(data.price);
-        }
+        const d = await res.json();
+        if (d.price) setLiveBrentPrice(d.price);
       } catch (error) {
         console.error("Failed to fetch live oil price:", error);
       }
     }
-
     fetchLivePrice();
-    // Refresh every 15 minutes
     const interval = setInterval(fetchLivePrice, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -89,7 +130,7 @@ export default function Home() {
     );
   }
 
-  if (!snapshot || !stocksHistory || !oilPrices || !retailPrices || !suppliers) {
+  if (!data) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
@@ -102,26 +143,49 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-950">
-      <HeroBanner snapshot={snapshot} liveBrentPrice={liveBrentPrice} />
+      <HeroBanner snapshot={data.snapshot} liveBrentPrice={liveBrentPrice} outages={data.outages} />
 
       <div className="border-t border-slate-800/50">
-        <DomesticStocks snapshot={snapshot} history={stocksHistory} />
+        <Layer1HereAndNow
+          snapshot={data.snapshot}
+          stocksHistory={data.stocksHistory}
+          retailPrices={data.retailPrices}
+          outages={data.outages}
+          priceDecomposition={data.priceDecomposition}
+        />
+      </div>
+
+      <ConnectorOneTwo refineryHistory={data.refineryHistory} />
+
+      <div className="border-t border-slate-800/50 bg-slate-900/30">
+        <Layer2SupplyChain
+          snapshot={data.snapshot}
+          suppliers={data.suppliers}
+          importSources={data.importSources}
+          shipping={data.shipping}
+        />
+      </div>
+
+      <ConnectorTwoThree />
+
+      <div className="border-t border-slate-800/50">
+        <Layer3Global
+          snapshot={data.snapshot}
+          oilPrices={data.oilPrices}
+          liveBrentPrice={liveBrentPrice}
+          timeline={data.timeline}
+          globalStatus={data.globalStatus}
+        />
       </div>
 
       <div className="border-t border-slate-800/50 bg-slate-900/30">
-        <SupplyChainMap suppliers={suppliers} />
-      </div>
-
-      <div className="border-t border-slate-800/50">
-        <GlobalDrivers snapshot={snapshot} oilPrices={oilPrices} liveBrentPrice={liveBrentPrice} />
-      </div>
-
-      <div className="border-t border-slate-800/50 bg-slate-900/30">
-        <RetailImpact snapshot={snapshot} retailPrices={retailPrices} />
-      </div>
-
-      <div className="border-t border-slate-800/50">
-        <Scenarios />
+        <Layer4Understanding
+          snapshot={data.snapshot}
+          priceDecomposition={data.priceDecomposition}
+          retailPrices={data.retailPrices}
+          refineryHistory={data.refineryHistory}
+          globalStatus={data.globalStatus}
+        />
       </div>
 
       <Footer />

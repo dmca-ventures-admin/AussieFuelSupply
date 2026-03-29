@@ -1,5 +1,5 @@
 {
-  "snapshot_date": "2026-03-22",
+  "snapshot_date": "2026-03-28",
   "domestic": {
     "petrol_days_supply": 38,
     "petrol_litres_held": 1644000000,
@@ -17,20 +17,41 @@
   },
   "global": {
     "brent_crude_usd": 96.68,
+    "brent_source": "ICE Futures via Investing.com",
+    "brent_as_of": "2026-03-25",
     "hormuz_status": "restricted",
+    "hormuz_source": "Reuters / CENTCOM",
+    "hormuz_as_of": "2026-03-28",
     "iea_release_mbl": 400,
-    "iea_committed_mbl": 422
+    "iea_committed_mbl": 422,
+    "iea_source": "IEA press release",
+    "iea_as_of": "2026-03-15",
+    "australia_iea_contribution_litres": 762000000,
+    "australia_iea_source": "Fuel Security Instrument 2026"
   },
   "retail": {
     "avg_petrol_price_cpl": 243.4,
     "avg_diesel_price_cpl": 260.0,
-    "nsw_stations_no_diesel": 107,
-    "nsw_stations_completely_dry": 42,
+    "petrol_price_source": "NSW FuelCheck",
+    "petrol_price_as_of": "2026-03-27",
+    "diesel_price_source": "AIP / FuelCheck estimate",
+    "diesel_price_as_of": "2026-03-27",
     "demand_spike_pct_some_areas": 50
   },
   "upstream_suppliers": {
     "note": "Australia imports ~90% of refined fuel",
-    "top_sources": ["South Korea", "Singapore", "Malaysia", "Taiwan"],
-    "ships_cancelled_april": 6
+    "top_sources": ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"],
+    "ships_cancelled": 6,
+    "ships_normal_monthly": 81,
+    "ships_cancelled_pct": 7.4,
+    "ships_source": "Minister Bowen, ABC Insiders 22 Mar 2026",
+    "ships_as_of": "2026-03-22",
+    "ships_monthly_breakdown": {
+      "diesel": 43,
+      "petrol": 16,
+      "jet_fuel": 8,
+      "other": 13
+    },
+    "ships_breakdown_source": "Vortexa via Argus Media (2025 avg)"
   }
 }

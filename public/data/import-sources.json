@@ -1,0 +1,13 @@
+{
+  "import_share_source": "Australian Petroleum Statistics 2024-25 via IEEFA/EIA",
+  "import_share_as_of": "FY 2024-25",
+  "sources": [
+    { "country": "South Korea", "flag": "🇰🇷", "share_pct": 26, "products": ["petrol", "diesel"] },
+    { "country": "Singapore",   "flag": "🇸🇬", "share_pct": 25, "products": ["petrol", "diesel"] },
+    { "country": "Malaysia",    "flag": "🇲🇾", "share_pct": 13, "products": ["diesel", "petrol"] },
+    { "country": "Taiwan",      "flag": "🇹🇼", "share_pct": 8,  "products": ["petrol"] },
+    { "country": "India",       "flag": "🇮🇳", "share_pct": 8,  "products": ["diesel"] },
+    { "country": "Domestic",    "flag": "🇦🇺", "share_pct": 10, "products": ["petrol", "diesel"] },
+    { "country": "Other",       "flag": "🌐",  "share_pct": 10, "products": ["petrol", "diesel"] }
+  ]
+}

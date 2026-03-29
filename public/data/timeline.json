@@ -1,0 +1,16 @@
+{
+  "events": [
+    { "date": "2026-02-26", "event": "US-Israel strikes on Iranian nuclear and military sites commence", "source": "Reuters / AP" },
+    { "date": "2026-02-28", "event": "Iran imposes transit restrictions on Strait of Hormuz; tanker traffic slows", "source": "Reuters / CENTCOM" },
+    { "date": "2026-03-03", "event": "Brent crude breaks $90/bbl for first time in 12 months", "source": "ICE Futures" },
+    { "date": "2026-03-05", "event": "IEA announces coordinated 400M barrel emergency stockpile release", "source": "IEA press release" },
+    { "date": "2026-03-10", "event": "Australian fuel companies report supply disruptions; DCCEEW switches MSO reporting to weekly", "source": "DCCEEW" },
+    { "date": "2026-03-13", "event": "Minister Bowen announces Australia will contribute 762M litres to IEA release via MSO reduction", "source": "Minister Bowen" },
+    { "date": "2026-03-14", "event": "Australia activates emergency fuel reserves — 213M L petrol + 548M L diesel authorised for drawdown", "source": "Fuel Security Instrument 2026" },
+    { "date": "2026-03-17", "event": "Fuel quality standards temporarily relaxed to accept broader range of import specifications", "source": "DCCEEW" },
+    { "date": "2026-03-22", "event": "6 scheduled tanker shipments to Australia cancelled/deferred for April", "source": "Minister Bowen, ABC Insiders" },
+    { "date": "2026-03-24", "event": "NSW station outages peak at 314 of 2,417 stations (13%)", "source": "Minister Bowen, Parliament" },
+    { "date": "2026-03-25", "event": "ACCC authorises fuel majors to coordinate supply during crisis; launches probe into independent supply restrictions", "source": "ACCC" },
+    { "date": "2026-03-27", "event": "National outage count: 608 of 7,798 stations affected (7.8%)", "source": "Minister Bowen, Parliament" }
+  ]
+}

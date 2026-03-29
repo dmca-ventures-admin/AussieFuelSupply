@@ -1,0 +1,21 @@
+{
+  "as_of": "2026-03-25",
+  "source": "ACCC / CarExpert analysis",
+  "total_cpl": 241.6,
+  "components": [
+    { "label": "Crude oil equivalent", "cpl": 88, "color": "#1e293b" },
+    { "label": "Singapore refinery margin", "cpl": 36, "color": "#f59e0b" },
+    { "label": "Wholesale costs", "cpl": 25, "color": "#3b82f6" },
+    { "label": "Fuel excise", "cpl": 52.6, "color": "#ef4444" },
+    { "label": "GST", "cpl": 20, "color": "#a855f7" },
+    { "label": "Retail margin", "cpl": 20, "color": "#22c55e" }
+  ],
+  "tax_share_pct": 33,
+  "notes": {
+    "excise_rate": "52.6 c/L (indexed bi-annually)",
+    "gst_rate": "10% on total price",
+    "benchmark": "Singapore Mogas 95 (MOPS 95)",
+    "lag": "~2 weeks between international price moves and bowser changes",
+    "rockets_and_feathers": "Prices rise fast, fall slow — partly reflects replacement-cost pricing"
+  }
+}

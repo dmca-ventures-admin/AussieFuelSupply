@@ -1,0 +1,21 @@
+{
+  "hormuz": {
+    "status": "restricted",
+    "summary": "Transit restrictions imposed following US-Israel strikes on Iran. Tanker traffic slowed, insurance costs spiked.",
+    "source": "Reuters / CENTCOM",
+    "as_of": "2026-03-28"
+  },
+  "iea_release": {
+    "requested_mbl": 400,
+    "committed_mbl": 422,
+    "member_nations": 32,
+    "source": "IEA press release",
+    "as_of": "2026-03-15"
+  },
+  "australia_contribution": {
+    "litres": 762000000,
+    "barrels_approx": 4800000,
+    "source": "Fuel Security (Temporary Reduction–Securing Regional Supply) Instrument 2026",
+    "as_of": "2026-03-13"
+  }
+}
