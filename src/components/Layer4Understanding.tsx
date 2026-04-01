@@ -346,7 +346,7 @@ function IEAGapChart({ snapshot }: { snapshot: Snapshot }) {
       </ResponsiveContainer>
       <p className="text-sm text-slate-400 mt-2">
         Australia holds only <strong className="text-red-400">{snapshot.domestic.iea_actual_days} IEA days</strong> vs the 90-day obligation —
-        the only IEA member that doesn&apos;t meet the target. We haven&apos;t met it since 2012. Most members hold 140+ days.
+        Australia holds fewer IEA days than most member nations, and has been below the 90-day obligation since 2012. Most IEA members hold 140+ days.
       </p>
     </div>
   );
@@ -376,11 +376,11 @@ function MarketStructure() {
       <p className="text-sm text-slate-400 leading-relaxed">
         Independent retailers (representing ~45% of service stations) must access terminals owned by their competitors.
         During shortages, supply allocation follows contracts, not need — so branded stations with standing contracts
-        get filled first while independents go dry.
+        get filled first.
       </p>
       <p className="text-sm text-slate-400 leading-relaxed">
-        The ACCC has authorised fuel majors to coordinate supply during the crisis (with conditions), and launched a separate probe
-        into whether major retailers are engaging in anti-competitive conduct by restricting supply to independents.
+        The ACCC has authorised fuel majors to coordinate supply during the crisis (with conditions), and
+        is monitoring supply allocation practices, including access for independent retailers.
       </p>
       <DataMeta source="ACCC / AIP" refresh="Event-driven" />
     </div>

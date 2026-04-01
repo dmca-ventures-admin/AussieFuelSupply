@@ -102,12 +102,7 @@ function GaugeChart({
       {fuelType === "diesel" && (
         <Explainer trigger="Why diesel matters more than petrol">
           <p>
-            Diesel powers <strong className="text-white">84% of on-farm energy</strong>, 100% of road freight (where fuel = 25–35% of operating costs),
-            most mining equipment, and backup power generation. It has only <strong className="text-red-400">{headroomPct}% headroom</strong> above the MSO minimum vs 78% for petrol.
-          </p>
-          <p>
-            The National Farmers&apos; Federation warned that a prolonged diesel shortage could drive food prices up <strong className="text-red-400">50%</strong>.
-            A diesel shortage doesn&apos;t just mean expensive fill-ups — it means empty supermarket shelves.
+            Diesel powers freight, farming, and mining — sectors that affect food prices and supply chains. The full picture is in the Understanding section below.
           </p>
         </Explainer>
       )}
@@ -184,20 +179,7 @@ function StationOutages({ outages }: { outages: OutagesData }) {
       </div>
       <p className="text-[10px] text-slate-600 mt-3">* Station totals are estimates for TAS, NT, ACT</p>
 
-      <Explainer trigger="Why is my servo dry when national supply is adequate?">
-        <p>
-          Australia&apos;s fuel distribution is <strong className="text-white">just-in-time</strong>. A tanker truck carries ~36,000 litres
-          and takes ~45 minutes to load. A busy servo can sell 50,000+ litres on a panic-buying day.
-        </p>
-        <p>
-          The truck fleet and terminal loading bays <strong className="text-amber-400">physically cannot keep up</strong> with 200–400% demand spikes,
-          even when the tanks at the port are full.
-        </p>
-        <p>
-          Independent retailers are hit hardest: they buy fuel on spot markets, while branded stations (Ampol, BP, Shell)
-          have standing contracts that get filled first.
-        </p>
-      </Explainer>
+      <p className="text-xs text-slate-500 mt-3 italic">Distribution bottleneck explained in the supply chain section below ↓</p>
     </div>
   );
 }

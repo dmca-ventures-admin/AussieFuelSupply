@@ -114,18 +114,7 @@ export default function Layer3Global({ snapshot, oilPrices, liveBrentPrice, time
             <DataMeta source={globalStatus.iea_release.source} asOf={globalStatus.iea_release.as_of} />
           </div>
 
-          {/* Ships */}
-          <div className="bg-slate-800/50 rounded-xl border border-red-500/20 p-5 flex-1">
-            <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">Supply Disruption</h3>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-2xl font-bold font-mono text-red-400">{snapshot.upstream_suppliers.ships_cancelled}</span>
-              <span className="text-sm text-slate-500">tankers cancelled</span>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Out of ~{snapshot.upstream_suppliers.ships_normal_monthly} normal monthly shipments ({snapshot.upstream_suppliers.ships_cancelled_pct}%).
-            </p>
-            <DataMeta source={snapshot.upstream_suppliers.ships_source} asOf={snapshot.upstream_suppliers.ships_as_of} />
-          </div>
+
         </div>
       </div>
 
