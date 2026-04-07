@@ -265,11 +265,10 @@ function ScenariosSection() {
               <span className={`inline-block self-start text-xs font-medium px-2.5 py-1 rounded-full ${c.badge} mb-3`}>
                 {s.likelihood}
               </span>
-              <ul className="space-y-2 flex-1">
+              <ul className="space-y-2 flex-1 list-disc list-inside">
                 {s.impact.map((item, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-slate-400">
-                    <span className={`${c.text} mt-0.5 flex-shrink-0`}>→</span>
-                    <span>{item}</span>
+                  <li key={i} className="text-sm text-slate-400">
+                    {item}
                   </li>
                 ))}
               </ul>

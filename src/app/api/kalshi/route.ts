@@ -26,10 +26,35 @@ export interface KalshiOdds {
   ticker: string;
 }
 
+interface KalshiHistoryPoint {
+  yes_price: number;
+  ts: string;
+}
+
 // In-memory cache for serverless resilience
-let cachedData: { markets: KalshiOdds[]; fetched_at: string } | null = null;
+let cachedData: { markets: KalshiOdds[]; history: Record<string, KalshiHistoryPoint[]>; fetched_at: string } | null = null;
 let cacheExpiry = 0;
 const CACHE_MS = 3600 * 1000; // 1 hour
+
+async function fetchHistory(ticker: string): Promise<KalshiHistoryPoint[]> {
+  try {
+    const res = await fetch(
+      `https://api.elections.kalshi.com/trade-api/v2/markets/${ticker}/history?limit=30`,
+      {
+        next: { revalidate: 3600 },
+        headers: { Accept: "application/json" },
+      }
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.history ?? []).map((h: { yes_price: number; ts: string }) => ({
+      yes_price: h.yes_price,
+      ts: h.ts,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 export async function GET() {
   const now = Date.now();
@@ -61,14 +86,11 @@ export async function GET() {
     const allMarkets: KalshiMarket[] = json.markets ?? [];
 
     // Pick the best market for each target cap_strike.
-    // "Best" = exact match on cap_strike, or closest non-settled market.
     const selected: KalshiOdds[] = TARGET_STRIKES.map((target) => {
-      // Exact match first
       let match = allMarkets.find(
         (m) => m.cap_strike === target && m.status !== "finalized"
       );
 
-      // If no exact match, find closest cap_strike among active markets
       if (!match) {
         const active = allMarkets.filter((m) => m.status === "active");
         if (active.length > 0) {
@@ -81,7 +103,6 @@ export async function GET() {
         }
       }
 
-      // If still nothing, take whatever is closest including settled
       if (!match && allMarkets.length > 0) {
         const sorted = [...allMarkets].sort(
           (a, b) =>
@@ -116,9 +137,23 @@ export async function GET() {
       };
     });
 
+    // Fetch 30-day history for each selected market in parallel
+    const tickers = selected.filter((m) => m.ticker).map((m) => m.ticker);
+    const historyResults = await Promise.all(
+      tickers.map(async (ticker) => ({
+        ticker,
+        history: await fetchHistory(ticker),
+      }))
+    );
+    const history: Record<string, KalshiHistoryPoint[]> = {};
+    for (const h of historyResults) {
+      history[h.ticker] = h.history;
+    }
+
     // Update cache
     cachedData = {
       markets: selected,
+      history,
       fetched_at: new Date().toISOString(),
     };
     cacheExpiry = now + CACHE_MS;
@@ -136,7 +171,6 @@ export async function GET() {
 }
 
 function fallbackOrError(reason: string) {
-  // Return stale cache if available
   if (cachedData) {
     return NextResponse.json(
       { ...cachedData, cached: true, stale: true, error: reason },
@@ -149,7 +183,7 @@ function fallbackOrError(reason: string) {
   }
 
   return NextResponse.json(
-    { markets: null, error: reason },
+    { markets: null, history: null, error: reason },
     {
       status: 200,
       headers: { "Cache-Control": "public, s-maxage=300" },

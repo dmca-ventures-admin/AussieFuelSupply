@@ -146,20 +146,20 @@ function DistributionFunnel() {
 
 /* ─── Main Layer 2 ─── */
 export default function Layer2SupplyChain({ snapshot, suppliers, importSources, shipping }: Layer2Props) {
-  // Build 6 refinery utilisation cards: Australia + 5 source markets
+  // Build 6 refinery utilisation cards: 5 source markets + Australia last
   const sourceCountries = ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"];
   const refineryCards: { flag: string; country: string; utilisation: number; status: string; note: string }[] = [];
 
-  // Australia first
-  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: 100, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
-
-  // Then source markets
+  // Source markets first
   for (const name of sourceCountries) {
     const s = suppliers.suppliers.find((sup) => sup.country === name);
     if (s) {
       refineryCards.push({ flag: s.flag, country: s.country, utilisation: s.refinery_utilisation_pct, status: s.status, note: s.note });
     }
   }
+
+  // Australia last
+  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: 100, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

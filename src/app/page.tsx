@@ -313,21 +313,21 @@ function Layer2Detail({
   importSources: ImportSourcesData;
   shipping: ShippingData;
 }) {
-  // Build the 6 refinery utilisation cards: Australia + 5 source markets
+  // Build the 6 refinery utilisation cards: 5 source markets + Australia last
   const sourceCountries = ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"];
   const refineryCards: { flag: string; country: string; utilisation: number; status: string; note: string }[] = [];
 
-  // Australia first
-  const ausUtil = suppliers.domestic_refineries.length > 0 ? 100 : 0;
-  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: ausUtil, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
-
-  // Then source markets
+  // Source markets first
   for (const name of sourceCountries) {
     const s = suppliers.suppliers.find((sup) => sup.country === name);
     if (s) {
       refineryCards.push({ flag: s.flag, country: s.country, utilisation: s.refinery_utilisation_pct, status: s.status, note: s.note });
     }
   }
+
+  // Australia last
+  const ausUtil = suppliers.domestic_refineries.length > 0 ? 100 : 0;
+  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: ausUtil, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
 
   return (
     <div className="space-y-6 animate-in">
@@ -454,7 +454,7 @@ function DoubleHopMap() {
         </p>
       </div>
 
-      <svg viewBox="0 0 920 380" className="w-full h-auto" aria-label="The Double Hop supply chain from Middle East through Asian refineries to Australia">
+      <svg viewBox="0 0 920 400" className="w-full h-auto" aria-label="The Double Hop supply chain from Middle East through Asian refineries to Australia">
         <defs>
           <style>{`
             .hop-flow { animation: hop-dash 3s linear infinite; }
@@ -464,20 +464,20 @@ function DoubleHopMap() {
           `}</style>
         </defs>
 
-        {/* Flow paths — crude to Hormuz */}
-        <path d="M 105,170 Q 170,170 210,190" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeDasharray="8 6" className="hop-flow" opacity="0.8" />
-        {/* Hormuz to refineries */}
-        <path d="M 250,190 Q 340,80 450,65" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,190 Q 340,130 450,125" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,190 Q 340,190 450,195" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,190 Q 340,240 450,255" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,190 Q 340,290 450,310" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        {/* Refineries to Australia */}
-        <path d="M 500,65 Q 610,130 730,235" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,125 Q 610,170 730,240" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,195 Q 610,220 730,248" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,255 Q 610,255 730,252" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,310 Q 610,285 730,258" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        {/* Flow paths — crude to Hormuz (connects circle edge r=26 to rect left edge) */}
+        <path d="M 131,170 Q 165,175 195,191" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeDasharray="8 6" className="hop-flow" opacity="0.8" />
+        {/* Hormuz to refineries (from rect right edge x=250 to circle left edge cx-r=428) */}
+        <path d="M 250,191 Q 340,80 428,70" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 250,191 Q 340,130 428,130" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 250,191 Q 340,195 428,195" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 250,191 Q 340,250 428,260" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 250,191 Q 340,300 428,320" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        {/* Refineries to Australia (from circle right edge cx+r=472 to Australia circle left edge 750-34=716) */}
+        <path d="M 472,70 Q 590,140 716,240" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 472,130 Q 590,175 716,243" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 472,195 Q 590,220 716,248" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 472,260 Q 590,260 716,252" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+        <path d="M 472,320 Q 590,290 716,258" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
 
         {/* Column labels */}
         <text x="105" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">CRUDE SOURCE</text>
@@ -497,16 +497,16 @@ function DoubleHopMap() {
         <text x="222" y="222" textAnchor="middle" fill="#94a3b8" fontSize="8">20% global oil</text>
 
         {/* S. Korea */}
-        <circle cx="450" cy="65" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="62" textAnchor="middle" fill="white" fontSize="16">🇰🇷</text>
-        <text x="450" y="75" textAnchor="middle" fill="#94a3b8" fontSize="7">30%</text>
-        <text x="450" y="98" textAnchor="middle" fill="#cbd5e1" fontSize="9">S. Korea</text>
+        <circle cx="450" cy="70" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
+        <text x="450" y="67" textAnchor="middle" fill="white" fontSize="16">🇰🇷</text>
+        <text x="450" y="80" textAnchor="middle" fill="#94a3b8" fontSize="7">30%</text>
+        <text x="450" y="103" textAnchor="middle" fill="#cbd5e1" fontSize="9">S. Korea</text>
 
         {/* Singapore */}
-        <circle cx="450" cy="125" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="122" textAnchor="middle" fill="white" fontSize="16">🇸🇬</text>
-        <text x="450" y="135" textAnchor="middle" fill="#94a3b8" fontSize="7">25%</text>
-        <text x="510" y="128" textAnchor="start" fill="#cbd5e1" fontSize="9">Singapore</text>
+        <circle cx="450" cy="130" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
+        <text x="450" y="127" textAnchor="middle" fill="white" fontSize="16">🇸🇬</text>
+        <text x="450" y="140" textAnchor="middle" fill="#94a3b8" fontSize="7">25%</text>
+        <text x="510" y="133" textAnchor="start" fill="#cbd5e1" fontSize="9">Singapore</text>
 
         {/* Malaysia */}
         <circle cx="450" cy="195" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
@@ -515,21 +515,21 @@ function DoubleHopMap() {
         <text x="510" y="198" textAnchor="start" fill="#cbd5e1" fontSize="9">Malaysia</text>
 
         {/* Taiwan */}
-        <circle cx="450" cy="255" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="252" textAnchor="middle" fill="white" fontSize="16">🇹🇼</text>
-        <text x="450" y="265" textAnchor="middle" fill="#94a3b8" fontSize="7">10%</text>
-        <text x="510" y="258" textAnchor="start" fill="#cbd5e1" fontSize="9">Taiwan</text>
+        <circle cx="450" cy="260" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
+        <text x="450" y="257" textAnchor="middle" fill="white" fontSize="16">🇹🇼</text>
+        <text x="450" y="270" textAnchor="middle" fill="#94a3b8" fontSize="7">10%</text>
+        <text x="510" y="263" textAnchor="start" fill="#cbd5e1" fontSize="9">Taiwan</text>
 
         {/* India */}
-        <circle cx="450" cy="310" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="307" textAnchor="middle" fill="white" fontSize="16">🇮🇳</text>
-        <text x="450" y="320" textAnchor="middle" fill="#94a3b8" fontSize="7">5%</text>
-        <text x="510" y="313" textAnchor="start" fill="#cbd5e1" fontSize="9">India</text>
+        <circle cx="450" cy="320" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
+        <text x="450" y="317" textAnchor="middle" fill="white" fontSize="16">🇮🇳</text>
+        <text x="450" y="330" textAnchor="middle" fill="#94a3b8" fontSize="7">5%</text>
+        <text x="510" y="323" textAnchor="start" fill="#cbd5e1" fontSize="9">India</text>
 
-        {/* Transit times */}
-        <text x="580" y="100" textAnchor="middle" fill="#64748b" fontSize="8" fontStyle="italic">~15 days</text>
-        <text x="620" y="170" textAnchor="middle" fill="#64748b" fontSize="8" fontStyle="italic">8–14 days</text>
-        <text x="620" y="260" textAnchor="middle" fill="#64748b" fontSize="8" fontStyle="italic">~7 days</text>
+        {/* Transit time labels — larger font, lighter colour, positioned clear of paths */}
+        <text x="590" y="95" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">~15 days</text>
+        <text x="600" y="175" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">8–14 days</text>
+        <text x="600" y="275" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">~7 days</text>
 
         {/* Australia */}
         <circle cx="750" cy="250" r="34" fill="#1e293b" stroke="#3b82f6" strokeWidth="3" />
@@ -537,7 +537,7 @@ function DoubleHopMap() {
         <text x="750" y="264" textAnchor="middle" fill="#93c5fd" fontSize="8" fontWeight="bold">AUSTRALIA</text>
 
         {/* Final mile */}
-        <path d="M 785,250 L 840,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
+        <path d="M 784,250 L 840,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
         <text x="845" y="243" textAnchor="start" fill="white" fontSize="12">🚛</text>
         <text x="845" y="258" textAnchor="start" fill="#64748b" fontSize="8">hours</text>
         <path d="M 870,250 L 905,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
@@ -545,7 +545,7 @@ function DoubleHopMap() {
         <text x="897" y="258" textAnchor="start" fill="#64748b" fontSize="7">servo</text>
 
         {/* Emergency US route */}
-        <text x="750" y="315" textAnchor="middle" fill="#64748b" fontSize="8">Emergency: US → Aus: 55–60 days</text>
+        <text x="750" y="330" textAnchor="middle" fill="#64748b" fontSize="8">Emergency: US → Aus: 55–60 days</text>
       </svg>
 
       <p className="text-sm text-slate-400 mt-4 leading-relaxed">
@@ -584,60 +584,63 @@ function Layer3Detail({
       {/* 1. Double Hop SVG — moved from Section 2 */}
       <DoubleHopMap />
 
-      {/* 2. Hormuz status */}
-      <div className={`bg-slate-800/50 rounded-xl border ${hormuzColors.border} p-6`}>
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">Strait of Hormuz</h3>
-        <div className="flex items-center gap-3 mb-3">
-          <span className={`w-4 h-4 rounded-full ${hormuzColors.dot}`} />
-          <span className={`text-2xl font-bold ${hormuzColors.text}`}>{snapshot.global.hormuz_status.toUpperCase()}</span>
+      {/* 2–4. Hormuz status, Brent crude, IEA release — responsive 3-panel grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Hormuz status */}
+        <div className={`bg-slate-800/50 rounded-xl border ${hormuzColors.border} p-6`}>
+          <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">Strait of Hormuz</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <span className={`w-4 h-4 rounded-full ${hormuzColors.dot}`} />
+            <span className={`text-2xl font-bold ${hormuzColors.text}`}>{snapshot.global.hormuz_status.toUpperCase()}</span>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed">{globalStatus.hormuz.summary}</p>
+          <DataMeta source={globalStatus.hormuz.source} asOf={globalStatus.hormuz.as_of} />
         </div>
-        <p className="text-xs text-slate-500 leading-relaxed">{globalStatus.hormuz.summary}</p>
-        <DataMeta source={globalStatus.hormuz.source} asOf={globalStatus.hormuz.as_of} />
-      </div>
 
-      {/* 3. Brent crude — 12-week sparkline matching Section 1 style */}
-      <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Brent Crude</h3>
-          <span className="text-2xl font-bold font-mono text-red-400">${(liveBrentPrice ?? snapshot.global.brent_crude_usd).toFixed(2)} <span className="text-sm font-normal text-slate-500">USD/bbl</span></span>
+        {/* Brent crude — 12-week sparkline */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Brent Crude</h3>
+            <span className="text-2xl font-bold font-mono text-red-400">${(liveBrentPrice ?? snapshot.global.brent_crude_usd).toFixed(2)} <span className="text-sm font-normal text-slate-500">USD/bbl</span></span>
+          </div>
+          <DataMeta source={snapshot.global.brent_source} asOf={snapshot.global.brent_as_of} refresh="Near real-time" />
+          <div className="mt-3">
+            <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">12-week trend</h4>
+            <ResponsiveContainer width="100%" height={80}>
+              <AreaChart data={brentSparkData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                <defs>
+                  <linearGradient id="brent-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }}
+                  formatter={(value) => [`$${Number(value).toFixed(2)} USD/bbl`, "Brent Crude"]}
+                />
+                <Area type="monotone" dataKey="price" stroke="#ef4444" strokeWidth={2} fill="url(#brent-grad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <DataMeta source={snapshot.global.brent_source} asOf={snapshot.global.brent_as_of} refresh="Near real-time" />
-        <div className="mt-3">
-          <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">12-week trend</h4>
-          <ResponsiveContainer width="100%" height={80}>
-            <AreaChart data={brentSparkData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-              <defs>
-                <linearGradient id="brent-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Tooltip
-                contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }}
-                formatter={(value) => [`$${Number(value).toFixed(2)} USD/bbl`, "Brent Crude"]}
-              />
-              <Area type="monotone" dataKey="price" stroke="#ef4444" strokeWidth={2} fill="url(#brent-grad)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
-      {/* 4. IEA release */}
-      <div className="bg-slate-800/50 rounded-xl border border-blue-500/20 p-6">
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">IEA Emergency Release</h3>
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-2xl font-bold font-mono text-blue-400">{globalStatus.iea_release.committed_mbl}M</span>
-          <span className="text-sm text-slate-500">barrels committed</span>
-        </div>
-        <p className="text-xs text-slate-500 mb-2">
-          {globalStatus.iea_release.member_nations} IEA member nations. Requested: {globalStatus.iea_release.requested_mbl}M bbl.
-        </p>
-        <div className="bg-blue-500/10 rounded-lg px-3 py-2 mt-2">
-          <p className="text-xs text-blue-400">
-            <strong>Australia&apos;s share:</strong> ~{(globalStatus.australia_contribution.barrels_approx / 1e6).toFixed(1)}M barrels ({(globalStatus.australia_contribution.litres / 1e6).toFixed(0)}M litres)
+        {/* IEA release */}
+        <div className="bg-slate-800/50 rounded-xl border border-blue-500/20 p-6">
+          <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">IEA Emergency Release</h3>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-2xl font-bold font-mono text-blue-400">{globalStatus.iea_release.committed_mbl}M</span>
+            <span className="text-sm text-slate-500">barrels committed</span>
+          </div>
+          <p className="text-xs text-slate-500 mb-2">
+            {globalStatus.iea_release.member_nations} IEA member nations. Requested: {globalStatus.iea_release.requested_mbl}M bbl.
           </p>
+          <div className="bg-blue-500/10 rounded-lg px-3 py-2 mt-2">
+            <p className="text-xs text-blue-400">
+              <strong>Australia&apos;s share:</strong> ~{(globalStatus.australia_contribution.barrels_approx / 1e6).toFixed(1)}M barrels ({(globalStatus.australia_contribution.litres / 1e6).toFixed(0)}M litres)
+            </p>
+          </div>
+          <DataMeta source={globalStatus.iea_release.source} asOf={globalStatus.iea_release.as_of} />
         </div>
-        <DataMeta source={globalStatus.iea_release.source} asOf={globalStatus.iea_release.as_of} />
       </div>
     </div>
   );
@@ -668,29 +671,71 @@ function getOddsColor(pct: number): { text: string; bg: string; border: string }
   return { text: "text-red-400", bg: "bg-red-500/20", border: "border-red-500/30" };
 }
 
-function Layer4Detail({ kalshiMarkets }: { kalshiMarkets: KalshiOdds[] | null }) {
+interface KalshiHistoryPoint {
+  yes_price: number;
+  ts: string;
+}
+
+function Sparkline({ data, color }: { data: KalshiHistoryPoint[]; color: string }) {
+  if (!data || data.length < 2) return null;
+  const prices = data.map((d) => d.yes_price * 100);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+  const w = 120;
+  const h = 32;
+  const points = prices
+    .map((p, i) => `${(i / (prices.length - 1)) * w},${h - ((p - min) / range) * h}`)
+    .join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-8 mt-2" preserveAspectRatio="none">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Layer4Detail({ kalshiMarkets, kalshiHistory }: { kalshiMarkets: KalshiOdds[] | null; kalshiHistory: Record<string, KalshiHistoryPoint[]> | null }) {
   const hasData = kalshiMarkets && kalshiMarkets.length > 0;
 
+  // Scenario data mapped to each prediction card by index
   const scenarios = [
     {
       title: "Hormuz reopens within 2 weeks",
-      borderColor: "border-emerald-500/30",
-      titleColor: "text-emerald-400",
-      summary: "Crude prices normalise within days. Australian retail prices follow in 4–6 weeks due to shipping lag. No rationing required.",
+      impact: [
+        "Crude oil prices begin normalising within days",
+        "Australian retail prices normalise in 4–6 weeks (shipping lag + price transmission)",
+        "Emergency reserves returned to pre-crisis levels within 3 months",
+        "No rationing required",
+      ],
     },
     {
       title: "Disruption continues 1–3 months",
-      borderColor: "border-amber-500/30",
-      titleColor: "text-amber-400",
-      summary: "Emergency reserves continue drawdown. IEA coordinated releases expand. Retail prices remain $2.40–$2.80/L. Regional rationing possible.",
+      impact: [
+        "Continued drawdown of emergency reserves",
+        "Further IEA coordinated releases",
+        "Retail prices remain elevated ($2.40–$2.80/L)",
+        "Regional fuel rationing becomes possible",
+        "US and other emergency supply routes become structural",
+      ],
     },
     {
       title: "Prolonged disruption 3+ months",
-      borderColor: "border-red-500/30",
-      titleColor: "text-red-400",
-      summary: "Formal rationing under Liquid Fuel Emergency Act 1984. Priority sector allocations. Civilian driving may be restricted. Food prices spike 30–50%.",
+      impact: [
+        "Emergency reserves approach depletion",
+        "Formal rationing under Liquid Fuel Emergency Act 1984",
+        "Priority sectors (agriculture, defence, health, freight) get allocations",
+        "Civilian driving restrictions possible",
+        "Severe economic impact — food prices spike",
+      ],
     },
   ];
+
+  const colorForIndex = (i: number) => {
+    if (i === 0) return { scenarioTitle: "text-red-400", sparkline: "#ef4444" };
+    if (i === 1) return { scenarioTitle: "text-amber-400", sparkline: "#f59e0b" };
+    return { scenarioTitle: "text-emerald-400", sparkline: "#22c55e" };
+  };
 
   return (
     <div className="space-y-6 animate-in">
@@ -705,57 +750,95 @@ function Layer4Detail({ kalshiMarkets }: { kalshiMarkets: KalshiOdds[] | null })
         </p>
       </div>
 
-      {/* Probability cards — live data or fallback */}
+      {/* Probability cards with inline scenarios and sparklines */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {hasData ? (
-          kalshiMarkets.map((m) => {
+          kalshiMarkets.map((m, i) => {
             const colors = getOddsColor(m.probability);
+            const scenario = scenarios[i];
+            const indexColors = colorForIndex(i);
+            const history = kalshiHistory?.[m.ticker] ?? [];
             return (
-              <div key={m.ticker} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-6 text-center`}>
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <p className="text-sm text-slate-400">Hormuz normal {m.date}</p>
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+              <div key={m.ticker} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-6 flex flex-col`}>
+                {/* Odds header */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <p className="text-sm text-slate-400">Hormuz normal {m.date}</p>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                      </span>
+                      <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
                     </span>
-                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
-                  </span>
+                  </div>
+                  <div className={`text-5xl font-bold font-mono ${colors.text} mb-2`}>
+                    {m.probability}%
+                  </div>
+                  <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden mt-3">
+                    <div className={`h-full ${colors.bg} rounded-full transition-all duration-1000`} style={{ width: `${m.probability}%` }} />
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-3 font-mono">{formatVolume(m.volume)}</p>
                 </div>
-                <div className={`text-5xl font-bold font-mono ${colors.text} mb-2`}>
-                  {m.probability}%
-                </div>
-                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden mt-3">
-                  <div className={`h-full ${colors.bg} rounded-full transition-all duration-1000`} style={{ width: `${m.probability}%` }} />
-                </div>
-                <p className="text-[10px] text-slate-500 mt-3 font-mono">{formatVolume(m.volume)}</p>
+
+                {/* 30-day sparkline */}
+                {history.length >= 2 && (
+                  <div className="mt-3 px-1">
+                    <p className="text-[9px] text-slate-600 uppercase tracking-wider mb-1">30-day trend</p>
+                    <Sparkline data={history} color={indexColors.sparkline} />
+                  </div>
+                )}
+
+                {/* Inline scenario */}
+                {scenario && (
+                  <div className="mt-4 pt-4 border-t border-slate-700/30 flex-1">
+                    <h4 className={`text-xs font-bold ${indexColors.scenarioTitle} mb-2`}>{scenario.title}</h4>
+                    <ul className="space-y-1.5">
+                      {scenario.impact.map((item, j) => (
+                        <li key={j} className="flex gap-2 text-xs text-slate-400">
+                          <span className="text-slate-600 mt-0.5 flex-shrink-0">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             );
           })
         ) : (
-          // Fallback: data unavailable
+          // Fallback: data unavailable with inline scenarios
           [
-            { label: "Hormuz normal Before May 1, 2026", border: "border-red-500/30" },
-            { label: "Hormuz normal Before Jul 1, 2026", border: "border-amber-500/30" },
-            { label: "Hormuz normal Before Jan 1, 2027", border: "border-emerald-500/30" },
-          ].map((f) => (
-            <div key={f.label} className={`bg-slate-800/50 rounded-xl border ${f.border} p-6 text-center`}>
-              <p className="text-sm text-slate-400 mb-4">{f.label}</p>
-              <div className="text-5xl font-bold font-mono text-slate-600 mb-2">—%</div>
-              <p className="text-[10px] text-slate-600 mt-3">Data unavailable</p>
-            </div>
-          ))
+            { label: "Hormuz normal Before May 1, 2026", border: "border-red-500/30", scenarioIdx: 0 },
+            { label: "Hormuz normal Before Jul 1, 2026", border: "border-amber-500/30", scenarioIdx: 1 },
+            { label: "Hormuz normal Before Jan 1, 2027", border: "border-emerald-500/30", scenarioIdx: 2 },
+          ].map((f) => {
+            const scenario = scenarios[f.scenarioIdx];
+            const indexColors = colorForIndex(f.scenarioIdx);
+            return (
+              <div key={f.label} className={`bg-slate-800/50 rounded-xl border ${f.border} p-6 flex flex-col`}>
+                <div className="text-center">
+                  <p className="text-sm text-slate-400 mb-4">{f.label}</p>
+                  <div className="text-5xl font-bold font-mono text-slate-600 mb-2">—%</div>
+                  <p className="text-[10px] text-slate-600 mt-3">Data unavailable</p>
+                </div>
+                {scenario && (
+                  <div className="mt-4 pt-4 border-t border-slate-700/30 flex-1">
+                    <h4 className={`text-xs font-bold ${indexColors.scenarioTitle} mb-2`}>{scenario.title}</h4>
+                    <ul className="space-y-1.5">
+                      {scenario.impact.map((item, j) => (
+                        <li key={j} className="flex gap-2 text-xs text-slate-400">
+                          <span className="text-slate-600 mt-0.5 flex-shrink-0">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
-      </div>
-
-      {/* Disruption scenarios aligned with date columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {scenarios.map((s) => (
-          <div key={s.title} className={`bg-slate-800/50 rounded-xl border ${s.borderColor} p-5`}>
-            <h4 className={`text-sm font-bold ${s.titleColor} mb-2`}>{s.title}</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">{s.summary}</p>
-          </div>
-        ))}
       </div>
 
       {/* Source attribution */}
@@ -831,6 +914,10 @@ function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const faqs = [
+    {
+      q: "What are prediction markets?",
+      a: `Prediction markets are real-money markets where participants bet on the outcome of future events. The prices reflect the collective probability estimate — if a contract trades at 71c, the market implies a 71% chance of that outcome. Kalshi is a US-regulated prediction market exchange. These are not financial advice.`,
+    },
     {
       q: "What does \"days of supply\" actually mean?",
       a: `"Days of supply" measures how long current fuel stocks would last if consumption continued at normal rates and no new fuel arrived. But this number is misleading if taken literally — Australia's fuel system is a flow system, not a stockpile. It only works because new imports arrive continuously by ship, typically every 1–3 weeks.\n\nThe figure includes fuel at terminals, in depots, and on ships within Australia's Exclusive Economic Zone (EEZ). It also counts crude oil at the two remaining domestic refineries, converted to product equivalent.\n\nCritically, panic buying shrinks effective days rapidly. If demand spikes 50%, 38 days of petrol supply effectively becomes ~25 days. During the 2026 crisis, some areas saw demand surge 200%, draining local stations in hours even though national aggregate stocks looked adequate.`,
@@ -1059,6 +1146,7 @@ export default function Home() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsFetchedAt, setNewsFetchedAt] = useState<string | null>(null);
   const [kalshiMarkets, setKalshiMarkets] = useState<KalshiOdds[] | null>(null);
+  const [kalshiHistory, setKalshiHistory] = useState<Record<string, KalshiHistoryPoint[]> | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -1128,6 +1216,9 @@ export default function Home() {
         const d = await res.json();
         if (d.markets) {
           setKalshiMarkets(d.markets);
+        }
+        if (d.history) {
+          setKalshiHistory(d.history);
         }
       } catch (error) {
         console.error("Failed to fetch Kalshi odds:", error);
@@ -1233,7 +1324,7 @@ export default function Home() {
               globalStatus={data.globalStatus}
             />
           )}
-          {activeLayer === 4 && <Layer4Detail kalshiMarkets={kalshiMarkets} />}
+          {activeLayer === 4 && <Layer4Detail kalshiMarkets={kalshiMarkets} kalshiHistory={kalshiHistory} />}
         </div>
       </section>
 
