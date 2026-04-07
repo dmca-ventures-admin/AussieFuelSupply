@@ -647,12 +647,29 @@ function Layer3Detail({
    LAYER 4 — PREDICTION MARKETS
    ════════════════════════════════════════════════════════════════════ */
 
-function Layer4Detail() {
-  const predictions = [
-    { label: "Hormuz open by 1 May 2026", odds: 34, color: "text-red-400", bgColor: "bg-red-500/20", borderColor: "border-red-500/30" },
-    { label: "Hormuz open by 1 Jul 2026", odds: 61, color: "text-amber-400", bgColor: "bg-amber-500/20", borderColor: "border-amber-500/30" },
-    { label: "Hormuz open by 1 Jan 2027", odds: 89, color: "text-emerald-400", bgColor: "bg-emerald-500/20", borderColor: "border-emerald-500/30" },
-  ];
+interface KalshiOdds {
+  date: string;
+  probability: number;
+  title: string;
+  volume: number;
+  status: string;
+  ticker: string;
+}
+
+function formatVolume(vol: number): string {
+  if (vol >= 1_000_000) return `$${(vol / 1_000_000).toFixed(1)}M traded`;
+  if (vol >= 1_000) return `$${Math.round(vol / 1_000)}K traded`;
+  return `$${vol} traded`;
+}
+
+function getOddsColor(pct: number): { text: string; bg: string; border: string } {
+  if (pct >= 65) return { text: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/30" };
+  if (pct >= 35) return { text: "text-amber-400", bg: "bg-amber-500/20", border: "border-amber-500/30" };
+  return { text: "text-red-400", bg: "bg-red-500/20", border: "border-red-500/30" };
+}
+
+function Layer4Detail({ kalshiMarkets }: { kalshiMarkets: KalshiOdds[] | null }) {
+  const hasData = kalshiMarkets && kalshiMarkets.length > 0;
 
   const scenarios = [
     {
@@ -688,17 +705,47 @@ function Layer4Detail() {
         </p>
       </div>
 
-      {/* Probability cards */}
+      {/* Probability cards — live data or fallback */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {predictions.map((p) => (
-          <div key={p.label} className={`bg-slate-800/50 rounded-xl border ${p.borderColor} p-6 text-center`}>
-            <p className="text-sm text-slate-400 mb-4">{p.label}</p>
-            <div className={`text-5xl font-bold font-mono ${p.color} mb-2`}>{p.odds}%</div>
-            <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden mt-3">
-              <div className={`h-full ${p.bgColor} rounded-full transition-all duration-1000`} style={{ width: `${p.odds}%` }} />
+        {hasData ? (
+          kalshiMarkets.map((m) => {
+            const colors = getOddsColor(m.probability);
+            return (
+              <div key={m.ticker} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-6 text-center`}>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <p className="text-sm text-slate-400">Hormuz normal {m.date}</p>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
+                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                  </span>
+                </div>
+                <div className={`text-5xl font-bold font-mono ${colors.text} mb-2`}>
+                  {m.probability}%
+                </div>
+                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden mt-3">
+                  <div className={`h-full ${colors.bg} rounded-full transition-all duration-1000`} style={{ width: `${m.probability}%` }} />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-3 font-mono">{formatVolume(m.volume)}</p>
+              </div>
+            );
+          })
+        ) : (
+          // Fallback: data unavailable
+          [
+            { label: "Hormuz normal Before May 1, 2026", border: "border-red-500/30" },
+            { label: "Hormuz normal Before Jul 1, 2026", border: "border-amber-500/30" },
+            { label: "Hormuz normal Before Jan 1, 2027", border: "border-emerald-500/30" },
+          ].map((f) => (
+            <div key={f.label} className={`bg-slate-800/50 rounded-xl border ${f.border} p-6 text-center`}>
+              <p className="text-sm text-slate-400 mb-4">{f.label}</p>
+              <div className="text-5xl font-bold font-mono text-slate-600 mb-2">—%</div>
+              <p className="text-[10px] text-slate-600 mt-3">Data unavailable</p>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Disruption scenarios aligned with date columns */}
@@ -711,12 +758,22 @@ function Layer4Detail() {
         ))}
       </div>
 
-      {/* Disclaimer */}
-      <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl px-6 py-4">
-        <p className="text-xs text-amber-400 mb-1 font-semibold">⚠️ Stub data — Kalshi API integration coming soon</p>
+      {/* Source attribution */}
+      <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl px-6 py-4">
         <p className="text-xs text-slate-500">
-          These odds are placeholders. When integrated, they will reflect real-money prediction market participants on{" "}
-          <a href="https://kalshi.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Kalshi.com</a>.
+          {hasData ? (
+            <>
+              Odds sourced from{" "}
+              <a href="https://kalshi.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Kalshi.com</a>
+              {" "}— a CFTC-regulated prediction market. Prices reflect real-money consensus probabilities. Updated hourly.
+            </>
+          ) : (
+            <>
+              Prediction market odds from{" "}
+              <a href="https://kalshi.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Kalshi.com</a>
+              {" "}are temporarily unavailable. Please check back shortly.
+            </>
+          )}
         </p>
       </div>
     </div>
@@ -837,7 +894,7 @@ interface LayerConfig {
   aggregateStatus: "green" | "amber" | "red";
 }
 
-function buildLayerConfigs(data: DashboardData, liveBrentPrice: number | null): LayerConfig[] {
+function buildLayerConfigs(data: DashboardData, liveBrentPrice: number | null, kalshiMarkets: KalshiOdds[] | null): LayerConfig[] {
   const snap = data.snapshot;
   const brentPrice = liveBrentPrice ?? snap.global.brent_crude_usd;
 
@@ -902,16 +959,36 @@ function buildLayerConfigs(data: DashboardData, liveBrentPrice: number | null): 
         { label: "IEA release", value: `${data.globalStatus.iea_release.committed_mbl}M bbl`, status: ieaStatus },
       ],
     },
-    {
-      id: 4,
-      name: "Prediction Markets",
-      aggregateStatus: "amber" as const,
-      indicators: [
-        { label: "Hormuz open by 1 May", value: "34%", status: "red" as const },
-        { label: "Hormuz open by 1 Jul", value: "61%", status: "amber" as const },
-        { label: "Hormuz open by 1 Jan '27", value: "89%", status: "green" as const },
-      ],
-    },
+    (() => {
+      // Build Layer 4 from live Kalshi data or fallback
+      const pctToStatus = (p: number): "green" | "amber" | "red" =>
+        p >= 65 ? "green" : p >= 35 ? "amber" : "red";
+
+      if (kalshiMarkets && kalshiMarkets.length >= 3) {
+        const indicators = kalshiMarkets.map((m) => ({
+          label: m.date,
+          value: `${m.probability}%`,
+          status: pctToStatus(m.probability),
+        }));
+        return {
+          id: 4,
+          name: "Prediction Markets",
+          aggregateStatus: worstOf(...indicators.map((i) => i.status)),
+          indicators,
+        };
+      }
+
+      return {
+        id: 4,
+        name: "Prediction Markets",
+        aggregateStatus: "amber" as const,
+        indicators: [
+          { label: "Hormuz normal by May", value: "—%", status: "amber" as const },
+          { label: "Hormuz normal by Jul", value: "—%", status: "amber" as const },
+          { label: "Hormuz normal by Jan '27", value: "—%", status: "amber" as const },
+        ],
+      };
+    })(),
   ];
 }
 
@@ -981,6 +1058,7 @@ export default function Home() {
   const [activeLayer, setActiveLayer] = useState(1);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsFetchedAt, setNewsFetchedAt] = useState<string | null>(null);
+  const [kalshiMarkets, setKalshiMarkets] = useState<KalshiOdds[] | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -1042,6 +1120,22 @@ export default function Home() {
     fetchNews();
   }, []);
 
+  // Fetch Kalshi prediction market odds
+  useEffect(() => {
+    async function fetchKalshi() {
+      try {
+        const res = await fetch("/api/kalshi");
+        const d = await res.json();
+        if (d.markets) {
+          setKalshiMarkets(d.markets);
+        }
+      } catch (error) {
+        console.error("Failed to fetch Kalshi odds:", error);
+      }
+    }
+    fetchKalshi();
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -1068,7 +1162,7 @@ export default function Home() {
     );
   }
 
-  const layers = buildLayerConfigs(data, liveBrentPrice);
+  const layers = buildLayerConfigs(data, liveBrentPrice, kalshiMarkets);
 
   return (
     <main className="min-h-screen bg-slate-950">
@@ -1139,7 +1233,7 @@ export default function Home() {
               globalStatus={data.globalStatus}
             />
           )}
-          {activeLayer === 4 && <Layer4Detail />}
+          {activeLayer === 4 && <Layer4Detail kalshiMarkets={kalshiMarkets} />}
         </div>
       </section>
 
