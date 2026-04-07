@@ -1,23 +1,19 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
-  ReferenceLine,
   PieChart,
   Pie,
   Cell,
 } from "recharts";
 import Footer from "@/components/Footer";
-import { DataMeta, Explainer, SeverityBadge } from "@/components/ui";
+import { DataMeta, SeverityBadge } from "@/components/ui";
 import { getDaysSupplyStatus, getStatusColor, getHormuzColor, formatLitres, formatCentsPerLitre } from "@/lib/utils";
 import type {
   Snapshot,
@@ -104,14 +100,14 @@ function Layer1Detail({
   const petrolMsoMin = Math.round(domestic.petrol_days_supply / (1 + domestic.petrol_pct_above_mso / 100));
   const dieselMsoMin = Math.round(domestic.diesel_days_supply / (1 + domestic.diesel_pct_above_mso / 100));
 
-  const petrolChartData = retailPrices.petrol_30d.map((d) => ({ date: d.date.slice(5), price: d.price }));
-  const dieselChartData = retailPrices.diesel_30d.map((d) => ({ date: d.date.slice(5), price: d.price }));
+  const petrolPriceData = retailPrices.petrol_30d.map((d) => ({ date: d.date.slice(5), price: d.price }));
+  const dieselPriceData = retailPrices.diesel_30d.map((d) => ({ date: d.date.slice(5), price: d.price }));
 
   return (
     <div className="space-y-6 animate-in">
-      {/* 1.1 & 1.2 — Petrol + Diesel price sparklines */}
+      {/* Row 1: Prices — current value + 12-week trend sparkline */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 1.1 Petrol price */}
+        {/* Petrol price card */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Retail Petrol</h3>
@@ -119,8 +115,9 @@ function Layer1Detail({
           </div>
           <DataMeta source={snapshot.retail.petrol_price_source} asOf={snapshot.retail.petrol_price_as_of} refresh="Daily" />
           <div className="mt-3">
+            <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">12-week trend</h4>
             <ResponsiveContainer width="100%" height={80}>
-              <AreaChart data={petrolChartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+              <AreaChart data={petrolPriceData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
                 <defs>
                   <linearGradient id="petrol-grad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.3} />
@@ -131,31 +128,9 @@ function Layer1Detail({
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          {/* 12-week trend */}
-          <div className="mt-4">
-            <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">Petrol — 12 Week Supply Trend</h4>
-            <ResponsiveContainer width="100%" height={80}>
-              <AreaChart data={stocksHistory.petrol} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-                <defs>
-                  <linearGradient id="petrol-supply-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="week" hide />
-                <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }}
-                  formatter={(value) => [`${value} days`, "Supply"]}
-                  labelFormatter={(label) => `Week of ${label}`}
-                />
-                <Area type="monotone" dataKey="days" stroke="#f59e0b" strokeWidth={2} fill="url(#petrol-supply-grad)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
         </div>
 
-        {/* 1.2 Diesel price */}
+        {/* Diesel price card */}
         <div className="bg-slate-800/50 rounded-xl border border-red-500/30 p-6">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
@@ -166,8 +141,9 @@ function Layer1Detail({
           </div>
           <DataMeta source={snapshot.retail.diesel_price_source} asOf={snapshot.retail.diesel_price_as_of} refresh="Daily" />
           <div className="mt-3">
+            <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">12-week trend</h4>
             <ResponsiveContainer width="100%" height={80}>
-              <AreaChart data={dieselChartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+              <AreaChart data={dieselPriceData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
                 <defs>
                   <linearGradient id="diesel-grad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
@@ -178,61 +154,45 @@ function Layer1Detail({
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          {/* 12-week trend */}
-          <div className="mt-4">
-            <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">Diesel — 12 Week Supply Trend</h4>
-            <ResponsiveContainer width="100%" height={80}>
-              <AreaChart data={stocksHistory.diesel} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-                <defs>
-                  <linearGradient id="diesel-supply-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="week" hide />
-                <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }}
-                  formatter={(value) => [`${value} days`, "Supply"]}
-                  labelFormatter={(label) => `Week of ${label}`}
-                />
-                <Area type="monotone" dataKey="days" stroke="#ef4444" strokeWidth={2} fill="url(#diesel-supply-grad)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
         </div>
       </div>
 
-      {/* 1.3 & 1.4 — Days of supply gauges */}
+      {/* Row 2: Days of Supply — gauge + 12-week sparkline in same card */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <GaugeChart value={domestic.petrol_days_supply} msoMin={petrolMsoMin} ieaTarget={domestic.iea_obligation_days} label="Petrol — Days of Supply" headroomPct={domestic.petrol_pct_above_mso} />
-        <GaugeChart value={domestic.diesel_days_supply} msoMin={dieselMsoMin} ieaTarget={domestic.iea_obligation_days} label="Diesel — Days of Supply" headroomPct={domestic.diesel_pct_above_mso} />
+        <DaysOfSupplyCard value={domestic.petrol_days_supply} msoMin={petrolMsoMin} ieaTarget={domestic.iea_obligation_days} label="Petrol — Days of Supply" headroomPct={domestic.petrol_pct_above_mso} trendData={stocksHistory.petrol} color="#f59e0b" gradId="petrol-supply-grad" />
+        <DaysOfSupplyCard value={domestic.diesel_days_supply} msoMin={dieselMsoMin} ieaTarget={domestic.iea_obligation_days} label="Diesel — Days of Supply" headroomPct={domestic.diesel_pct_above_mso} trendData={stocksHistory.diesel} color="#ef4444" gradId="diesel-supply-grad" />
       </div>
 
-      {/* 1.5 — Station outages by state */}
-      <StationOutages outages={outages} />
-
-      {/* 1.6 & 1.7 — Stubs */}
+      {/* Row 3: Demand stubs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StubCard title="Weekly Petrol Demand in Australia" />
         <StubCard title="Weekly Diesel Demand in Australia" />
       </div>
+
+      {/* Row 4: Station outages — full width */}
+      <StationOutages outages={outages} />
     </div>
   );
 }
 
-function GaugeChart({
+function DaysOfSupplyCard({
   value,
   msoMin,
   ieaTarget,
   label,
   headroomPct,
+  trendData,
+  color,
+  gradId,
 }: {
   value: number;
   msoMin: number;
   ieaTarget: number;
   label: string;
   headroomPct: number;
+  trendData: { week: string; days: number }[];
+  color: string;
+  gradId: string;
 }) {
   const max = ieaTarget + 10;
   const pct = Math.min((value / max) * 100, 100);
@@ -253,6 +213,8 @@ function GaugeChart({
         </div>
       </div>
       <DataMeta source="DCCEEW MSO weekly" asOf="2026-03-17" refresh="Weekly (Fridays)" />
+
+      {/* Gauge bar */}
       <div className="relative h-6 bg-slate-700/50 rounded-full overflow-hidden mt-4 mb-3">
         <div className={`absolute inset-y-0 left-0 rounded-full ${colors.bg} transition-all duration-1000`} style={{ width: `${pct}%` }} />
         <div className="absolute inset-y-0 w-0.5 bg-yellow-400/80" style={{ left: `${msoPct}%` }} />
@@ -271,6 +233,29 @@ function GaugeChart({
           <span className={`w-3 h-0.5 ${colors.bg} rounded`} />
           <span>Current ({value}d)</span>
         </div>
+      </div>
+
+      {/* 12-week trend sparkline */}
+      <div className="mt-4">
+        <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">12-week trend</h4>
+        <ResponsiveContainer width="100%" height={80}>
+          <AreaChart data={trendData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="week" hide />
+            <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }}
+              formatter={(v) => [`${v} days`, "Supply"]}
+              labelFormatter={(l) => `Week of ${l}`}
+            />
+            <Area type="monotone" dataKey="days" stroke={color} strokeWidth={2} fill={`url(#${gradId})`} />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -328,79 +313,58 @@ function Layer2Detail({
   importSources: ImportSourcesData;
   shipping: ShippingData;
 }) {
+  // Build the 6 refinery utilisation cards: Australia + 5 source markets
+  const sourceCountries = ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"];
+  const refineryCards: { flag: string; country: string; utilisation: number; status: string; note: string }[] = [];
+
+  // Australia first
+  const ausUtil = suppliers.domestic_refineries.length > 0 ? 100 : 0;
+  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: ausUtil, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
+
+  // Then source markets
+  for (const name of sourceCountries) {
+    const s = suppliers.suppliers.find((sup) => sup.country === name);
+    if (s) {
+      refineryCards.push({ flag: s.flag, country: s.country, utilisation: s.refinery_utilisation_pct, status: s.status, note: s.note });
+    }
+  }
+
   return (
     <div className="space-y-6 animate-in">
-      {/* 2.1-2.4 Supplier cards for key 4 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {suppliers.suppliers.filter((s) => ["South Korea", "Singapore", "Malaysia", "Australia"].includes(s.country) === false).length >= 0 &&
-          suppliers.suppliers.map((s) => {
-            const colors = getStatusColor(s.status);
+      {/* 1. Import donut — full width */}
+      <ImportDonut importSources={importSources} />
+
+      {/* 2. Refinery utilisation grid — 6 cards, responsive 3→2→1 columns */}
+      <div>
+        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Refinery Utilisation</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {refineryCards.map((card) => {
+            const colors = getStatusColor(card.status as "green" | "amber" | "red");
             return (
-              <div key={s.country} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-5`}>
+              <div key={card.country} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">{s.flag}</span>
-                  <div>
-                    <h4 className="text-white font-semibold">{s.country}</h4>
-                    <p className="text-xs text-slate-500">{s.share_pct}% of imports</p>
-                  </div>
+                  <span className="text-2xl">{card.flag}</span>
+                  <h4 className="text-white font-semibold">{card.country}</h4>
                   <span className={`ml-auto w-2.5 h-2.5 rounded-full ${colors.dot}`} />
                 </div>
-                <p className="text-xs text-slate-400 mb-3">{s.role}</p>
-                {s.gasoline_stocks_ml && (
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <span className="text-xs text-slate-500">Gasoline</span>
-                      <p className="text-sm font-mono text-white">{s.gasoline_stocks_ml} ML</p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-slate-500">Diesel</span>
-                      <p className="text-sm font-mono text-white">{s.diesel_stocks_ml} ML</p>
-                    </div>
-                  </div>
-                )}
                 <div className="mb-2">
                   <span className="text-xs text-slate-500">Refinery utilisation</span>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                      <div className={`h-full ${colors.bg} rounded-full`} style={{ width: `${s.refinery_utilisation_pct}%` }} />
+                      <div className={`h-full ${colors.bg} rounded-full`} style={{ width: `${card.utilisation}%` }} />
                     </div>
-                    <span className="text-xs font-mono text-slate-300">{s.refinery_utilisation_pct}%</span>
+                    <span className="text-xs font-mono text-slate-300">{card.utilisation}%</span>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 italic">{s.note}</p>
+                <p className="text-xs text-slate-500 italic">{card.note}</p>
               </div>
             );
           })}
-      </div>
-
-      {/* Domestic refineries */}
-      <div className="bg-slate-800/30 rounded-xl border border-amber-500/20 p-6">
-        <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-4">
-          🏭 Australia&apos;s Remaining Refineries (2 of originally 8)
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {suppliers.domestic_refineries.map((r) => (
-            <div key={r.name} className="flex items-start gap-3">
-              <span className="text-emerald-400 mt-1">●</span>
-              <div>
-                <p className="text-white font-medium">{r.name}</p>
-                <p className="text-xs text-slate-400">{r.location} · {r.capacity_bpd.toLocaleString()} bbl/day</p>
-                <p className="text-xs text-slate-500 italic">{r.note}</p>
-              </div>
-            </div>
-          ))}
         </div>
-        <DataMeta source="DCCEEW" refresh="Static (event-driven)" />
       </div>
 
-      {/* 2.5 — Import donut */}
-      <ImportDonut importSources={importSources} />
-
-      {/* 2.8 — Ship cancellations */}
+      {/* 3. Ship cancellations — full width */}
       <ShipCancellations shipping={shipping} />
-
-      {/* Double Hop Map */}
-      <DoubleHopMap />
     </div>
   );
 }
@@ -607,17 +571,20 @@ function Layer3Detail({
   liveBrentPrice: number | null;
   globalStatus: GlobalStatusData;
 }) {
-  const chartData = oilPrices.brent_30d.map((d) => ({ date: d.date.slice(5), price: d.price }));
+  const brentSparkData = oilPrices.brent_30d.map((d) => ({ date: d.date.slice(5), price: d.price }));
   if (liveBrentPrice) {
     const today = new Date().toISOString().slice(5, 10);
-    chartData.push({ date: today, price: liveBrentPrice });
+    brentSparkData.push({ date: today, price: liveBrentPrice });
   }
 
   const hormuzColors = getStatusColor(snapshot.global.hormuz_status === "open" ? "green" : "red");
 
   return (
     <div className="space-y-6 animate-in">
-      {/* 3.1 — Hormuz status */}
+      {/* 1. Double Hop SVG — moved from Section 2 */}
+      <DoubleHopMap />
+
+      {/* 2. Hormuz status */}
       <div className={`bg-slate-800/50 rounded-xl border ${hormuzColors.border} p-6`}>
         <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">Strait of Hormuz</h3>
         <div className="flex items-center gap-3 mb-3">
@@ -628,37 +595,34 @@ function Layer3Detail({
         <DataMeta source={globalStatus.hormuz.source} asOf={globalStatus.hormuz.as_of} />
       </div>
 
-      {/* 3.2 — Brent crude 30-day chart */}
+      {/* 3. Brent crude — 12-week sparkline matching Section 1 style */}
       <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Brent Crude — 30 Day Trend</h3>
-          <span className="text-2xl font-bold font-mono text-red-400">${(liveBrentPrice ?? snapshot.global.brent_crude_usd).toFixed(2)}</span>
+          <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Brent Crude</h3>
+          <span className="text-2xl font-bold font-mono text-red-400">${(liveBrentPrice ?? snapshot.global.brent_crude_usd).toFixed(2)} <span className="text-sm font-normal text-slate-500">USD/bbl</span></span>
         </div>
         <DataMeta source={snapshot.global.brent_source} asOf={snapshot.global.brent_as_of} refresh="Near real-time" />
-        <div className="mt-4">
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={{ stroke: "#334155" }} />
-              <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} domain={["dataMin - 2", "dataMax + 2"]} tickFormatter={(v) => `$${v}`} />
-              <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }} formatter={(value) => [`$${Number(value).toFixed(2)} USD/bbl`, "Brent Crude"]} />
-              {oilPrices.events.map((e) => (
-                <ReferenceLine key={e.date} x={e.date.slice(5)} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} />
-              ))}
-              <Line type="monotone" dataKey="price" stroke="#ef4444" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: "#ef4444" }} />
-            </LineChart>
+        <div className="mt-3">
+          <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">12-week trend</h4>
+          <ResponsiveContainer width="100%" height={80}>
+            <AreaChart data={brentSparkData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+              <defs>
+                <linearGradient id="brent-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Tooltip
+                contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }}
+                formatter={(value) => [`$${Number(value).toFixed(2)} USD/bbl`, "Brent Crude"]}
+              />
+              <Area type="monotone" dataKey="price" stroke="#ef4444" strokeWidth={2} fill="url(#brent-grad)" />
+            </AreaChart>
           </ResponsiveContainer>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {oilPrices.events.map((e) => (
-            <span key={e.date} className="text-xs bg-amber-500/10 text-amber-400 px-2 py-1 rounded-md">
-              {e.date.slice(5)}: {e.label}
-            </span>
-          ))}
         </div>
       </div>
 
-      {/* 3.3 — IEA release */}
+      {/* 4. IEA release */}
       <div className="bg-slate-800/50 rounded-xl border border-blue-500/20 p-6">
         <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">IEA Emergency Release</h3>
         <div className="flex items-baseline gap-2 mb-1">
@@ -690,6 +654,27 @@ function Layer4Detail() {
     { label: "Hormuz open by 1 Jan 2027", odds: 89, color: "text-emerald-400", bgColor: "bg-emerald-500/20", borderColor: "border-emerald-500/30" },
   ];
 
+  const scenarios = [
+    {
+      title: "Hormuz reopens within 2 weeks",
+      borderColor: "border-emerald-500/30",
+      titleColor: "text-emerald-400",
+      summary: "Crude prices normalise within days. Australian retail prices follow in 4–6 weeks due to shipping lag. No rationing required.",
+    },
+    {
+      title: "Disruption continues 1–3 months",
+      borderColor: "border-amber-500/30",
+      titleColor: "text-amber-400",
+      summary: "Emergency reserves continue drawdown. IEA coordinated releases expand. Retail prices remain $2.40–$2.80/L. Regional rationing possible.",
+    },
+    {
+      title: "Prolonged disruption 3+ months",
+      borderColor: "border-red-500/30",
+      titleColor: "text-red-400",
+      summary: "Formal rationing under Liquid Fuel Emergency Act 1984. Priority sector allocations. Civilian driving may be restricted. Food prices spike 30–50%.",
+    },
+  ];
+
   return (
     <div className="space-y-6 animate-in">
       {/* Explanation */}
@@ -712,6 +697,16 @@ function Layer4Detail() {
             <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden mt-3">
               <div className={`h-full ${p.bgColor} rounded-full transition-all duration-1000`} style={{ width: `${p.odds}%` }} />
             </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Disruption scenarios aligned with date columns */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {scenarios.map((s) => (
+          <div key={s.title} className={`bg-slate-800/50 rounded-xl border ${s.borderColor} p-5`}>
+            <h4 className={`text-sm font-bold ${s.titleColor} mb-2`}>{s.title}</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">{s.summary}</p>
           </div>
         ))}
       </div>
@@ -741,39 +736,29 @@ function NewsFeed({ news, fetchedAt }: { news: NewsItem[]; fetchedAt: string | n
     );
   }
 
-  const sourceBadge = (source: string) => {
-    if (source.includes("ABC")) return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-    if (source.includes("Reuters")) return "bg-orange-500/20 text-orange-400 border-orange-500/30";
-    return "bg-slate-500/20 text-slate-400 border-slate-500/30";
-  };
-
   return (
-    <div className="space-y-0">
-      {news.map((item, i) => {
-        const date = new Date(item.date);
-        const dateStr = date.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+    <div className="bg-slate-800/30 rounded-xl border border-slate-700/30 p-6">
+      <div className="space-y-3">
+        {news.map((item, i) => {
+          const date = new Date(item.date);
+          const dateStr = date.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
 
-        return (
-          <div key={`${item.url}-${i}`} className="flex gap-4 py-4 border-b border-slate-800/50 last:border-0 group">
-            <div className="flex-shrink-0 w-16 text-right">
-              <span className="text-xs font-mono text-slate-500">{dateStr}</span>
-            </div>
-            <div className="flex-shrink-0 pt-1.5 relative">
-              <span className="w-2 h-2 rounded-full bg-amber-400 block" />
-              {i < news.length - 1 && <span className="absolute left-[3px] top-4 bottom-0 w-0.5 bg-slate-800" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${sourceBadge(item.source)}`}>{item.source}</span>
+          return (
+            <div key={`${item.url}-${i}`} className="flex gap-4 items-start">
+              <span className="text-xs font-mono text-slate-500 whitespace-nowrap mt-0.5 w-16 flex-shrink-0 text-right">
+                {dateStr}
+              </span>
+              <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-slate-300 hover:text-amber-400 transition-colors">
+                  {item.title}
+                </a>
+                <span className="text-[10px] text-slate-600 ml-2">({item.source})</span>
               </div>
-              <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white group-hover:text-amber-400 transition-colors leading-snug block">
-                {item.title}
-              </a>
-              {item.summary && <p className="text-xs text-slate-500 mt-1 line-clamp-1">{item.summary}</p>}
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
       {fetchedAt && (
         <p className="text-[10px] text-slate-600 mt-4 text-right">Last updated: {new Date(fetchedAt).toLocaleString("en-AU")}</p>
       )}
@@ -960,9 +945,8 @@ function LayerColumnSelector({
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
               <StatusDot status={layer.aggregateStatus} />
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Layer {layer.id}</span>
+              <h3 className="text-sm font-semibold text-white">{layer.name}</h3>
             </div>
-            <h3 className="text-sm font-semibold text-white mb-3">{layer.name}</h3>
 
             {/* Indicators */}
             <div className="space-y-2">
@@ -1122,10 +1106,9 @@ export default function Home() {
       {/* ─── Expanded Layer Detail Panel ─── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="border-t border-slate-800/50 pt-8">
-          {/* Layer header */}
+          {/* Section header */}
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/60 border border-slate-700/40 mb-3">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Layer {activeLayer}</span>
               <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">
                 {layers.find((l) => l.id === activeLayer)?.name}
               </span>

@@ -109,106 +109,6 @@ function ShipCancellations({ shipping }: { shipping: ShippingData }) {
   );
 }
 
-/* ─── The Double Hop — animated SVG ─── */
-function DoubleHopMap() {
-  return (
-    <div className="bg-slate-800/50 rounded-xl border border-amber-500/20 p-6">
-      <h3 className="text-lg font-semibold text-amber-400 mb-1">
-        🗺️ &quot;The Double Hop&quot; — Why a war in Iran empties Australian servos
-      </h3>
-      <p className="text-xs text-slate-500 mb-4">
-        Australia&apos;s fuel doesn&apos;t come from the Middle East directly. It comes from Asian refineries that get 60–70% of their crude through Hormuz.
-      </p>
-
-      <svg viewBox="0 0 920 380" className="w-full h-auto" aria-label="The Double Hop supply chain from Middle East through Asian refineries to Australia">
-        <defs>
-          <style>{`
-            .hop-flow { animation: hop-dash 3s linear infinite; }
-            @keyframes hop-dash { to { stroke-dashoffset: -30; } }
-            .hop-pulse { animation: hop-p 2s ease-in-out infinite; }
-            @keyframes hop-p { 0%,100% { opacity:0.6 } 50% { opacity:1 } }
-          `}</style>
-        </defs>
-
-        {/* Flow paths */}
-        <path d="M 105,170 Q 170,170 210,190" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeDasharray="8 6" className="hop-flow" opacity="0.8" />
-        <path d="M 250,190 Q 340,100 450,85" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,190 Q 340,160 450,155" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,190 Q 340,220 450,230" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,190 Q 340,270 450,290" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,85 Q 610,140 730,235" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,155 Q 610,190 730,245" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,230 Q 610,240 730,255" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 500,290 Q 610,280 730,260" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-
-        {/* Labels */}
-        <text x="105" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">CRUDE SOURCE</text>
-        <text x="350" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">ASIAN REFINERIES</text>
-        <text x="750" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">AUSTRALIA</text>
-
-        {/* Middle East */}
-        <circle cx="105" cy="170" r="26" fill="#1e293b" stroke="#ef4444" strokeWidth="2" />
-        <text x="105" y="167" textAnchor="middle" fill="#ef4444" fontSize="20">🛢️</text>
-        <text x="105" y="183" textAnchor="middle" fill="#94a3b8" fontSize="7" fontWeight="bold">CRUDE</text>
-        <text x="105" y="210" textAnchor="middle" fill="#cbd5e1" fontSize="10" fontWeight="600">Middle East</text>
-
-        {/* Hormuz */}
-        <rect x="195" y="175" width="55" height="32" rx="6" fill="#7f1d1d" stroke="#ef4444" strokeWidth="2" />
-        <text x="222" y="190" textAnchor="middle" fill="#fca5a5" fontSize="8" fontWeight="bold">HORMUZ</text>
-        <text x="222" y="201" textAnchor="middle" fill="#ef4444" fontSize="7">⚠ RESTRICTED</text>
-        <text x="222" y="222" textAnchor="middle" fill="#94a3b8" fontSize="8">20% global oil</text>
-
-        {/* Refinery nodes */}
-        <circle cx="450" cy="85" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="82" textAnchor="middle" fill="white" fontSize="16">🇰🇷</text>
-        <text x="450" y="95" textAnchor="middle" fill="#94a3b8" fontSize="7">26%</text>
-        <text x="450" y="118" textAnchor="middle" fill="#cbd5e1" fontSize="9">S. Korea</text>
-
-        <circle cx="450" cy="155" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="152" textAnchor="middle" fill="white" fontSize="16">🇸🇬</text>
-        <text x="450" y="165" textAnchor="middle" fill="#94a3b8" fontSize="7">25%</text>
-        <text x="510" y="158" textAnchor="start" fill="#cbd5e1" fontSize="9">Singapore</text>
-
-        <circle cx="450" cy="230" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="227" textAnchor="middle" fill="white" fontSize="16">🇲🇾</text>
-        <text x="450" y="240" textAnchor="middle" fill="#94a3b8" fontSize="7">13%</text>
-        <text x="510" y="233" textAnchor="start" fill="#cbd5e1" fontSize="9">Malaysia</text>
-
-        <circle cx="450" cy="290" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="287" textAnchor="middle" fill="white" fontSize="16">🇮🇳</text>
-        <text x="450" y="300" textAnchor="middle" fill="#94a3b8" fontSize="7">8%</text>
-        <text x="510" y="293" textAnchor="start" fill="#cbd5e1" fontSize="9">India</text>
-
-        {/* Transit times */}
-        <text x="580" y="120" textAnchor="middle" fill="#64748b" fontSize="8" fontStyle="italic">~15 days</text>
-        <text x="620" y="190" textAnchor="middle" fill="#64748b" fontSize="8" fontStyle="italic">8–14 days</text>
-        <text x="620" y="250" textAnchor="middle" fill="#64748b" fontSize="8" fontStyle="italic">~7 days</text>
-
-        {/* Australia */}
-        <circle cx="750" cy="250" r="34" fill="#1e293b" stroke="#3b82f6" strokeWidth="3" />
-        <text x="750" y="245" textAnchor="middle" fill="white" fontSize="24">🇦🇺</text>
-        <text x="750" y="264" textAnchor="middle" fill="#93c5fd" fontSize="8" fontWeight="bold">AUSTRALIA</text>
-
-        {/* Final mile */}
-        <path d="M 785,250 L 840,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
-        <text x="845" y="243" textAnchor="start" fill="white" fontSize="12">🚛</text>
-        <text x="845" y="258" textAnchor="start" fill="#64748b" fontSize="8">hours</text>
-        <path d="M 870,250 L 905,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
-        <text x="903" y="243" textAnchor="start" fill="white" fontSize="11">⛽</text>
-        <text x="897" y="258" textAnchor="start" fill="#64748b" fontSize="7">servo</text>
-
-        {/* Emergency US route */}
-        <text x="750" y="315" textAnchor="middle" fill="#64748b" fontSize="8">Emergency: US → Aus: 55–60 days</text>
-      </svg>
-
-      <p className="text-sm text-slate-400 mt-4 leading-relaxed">
-        <strong className="text-white">Key insight:</strong> When Hormuz is restricted, it doesn&apos;t matter that Australia has no direct oil trade with Iran.
-        Our suppliers&apos; suppliers are affected. This is why a conflict 12,000km away can empty a servo in rural NSW within weeks.
-      </p>
-    </div>
-  );
-}
-
 /* ─── Adequate but Unavailable funnel ─── */
 function DistributionFunnel() {
   const stages = [
@@ -244,54 +144,23 @@ function DistributionFunnel() {
   );
 }
 
-/* ─── Supplier Detail Cards ─── */
-function SupplierCards({ suppliers }: { suppliers: SuppliersData }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {suppliers.suppliers.map((s) => {
-        const colors = getStatusColor(s.status);
-        return (
-          <div key={s.country} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-5`}>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl">{s.flag}</span>
-              <div>
-                <h4 className="text-white font-semibold">{s.country}</h4>
-                <p className="text-xs text-slate-500">{s.share_pct}% of imports</p>
-              </div>
-              <span className={`ml-auto w-2.5 h-2.5 rounded-full ${colors.dot}`} />
-            </div>
-            <p className="text-xs text-slate-400 mb-3">{s.role}</p>
-            {s.gasoline_stocks_ml && (
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <span className="text-xs text-slate-500">Gasoline stocks</span>
-                  <p className="text-sm font-mono text-white">{s.gasoline_stocks_ml} ML</p>
-                </div>
-                <div>
-                  <span className="text-xs text-slate-500">Diesel stocks</span>
-                  <p className="text-sm font-mono text-white">{s.diesel_stocks_ml} ML</p>
-                </div>
-              </div>
-            )}
-            <div className="mb-2">
-              <span className="text-xs text-slate-500">Refinery utilisation</span>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div className={`h-full ${colors.bg} rounded-full`} style={{ width: `${s.refinery_utilisation_pct}%` }} />
-                </div>
-                <span className="text-xs font-mono text-slate-300">{s.refinery_utilisation_pct}%</span>
-              </div>
-            </div>
-            <p className="text-xs text-slate-500 italic">{s.note}</p>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ─── Main Layer 2 ─── */
 export default function Layer2SupplyChain({ snapshot, suppliers, importSources, shipping }: Layer2Props) {
+  // Build 6 refinery utilisation cards: Australia + 5 source markets
+  const sourceCountries = ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"];
+  const refineryCards: { flag: string; country: string; utilisation: number; status: string; note: string }[] = [];
+
+  // Australia first
+  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: 100, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
+
+  // Then source markets
+  for (const name of sourceCountries) {
+    const s = suppliers.suppliers.find((sup) => sup.country === name);
+    if (s) {
+      refineryCards.push({ flag: s.flag, country: s.country, utilisation: s.refinery_utilisation_pct, status: s.status, note: s.note });
+    }
+  }
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <SectionHeading
@@ -300,47 +169,49 @@ export default function Layer2SupplyChain({ snapshot, suppliers, importSources, 
         subtitle="Australia imports ~90% of its refined fuel. Only two refineries remain domestically — supplying less than 20% of demand. The rest arrives from Asian refineries, taking 1–3 weeks by tanker ship."
       />
 
-      {/* Import sources + Ship cancellations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      {/* 1. Import donut — full width */}
+      <div className="mb-8">
         <ImportDonut importSources={importSources} />
-        <ShipCancellations shipping={shipping} />
       </div>
 
-      {/* The Double Hop */}
+      {/* 2. Refinery utilisation grid — 6 cards, responsive 3→2→1 */}
       <div className="mb-8">
-        <DoubleHopMap />
+        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Refinery Utilisation</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {refineryCards.map((card) => {
+            const colors = getStatusColor(card.status as "green" | "amber" | "red");
+            return (
+              <div key={card.country} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-5`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">{card.flag}</span>
+                  <h4 className="text-white font-semibold">{card.country}</h4>
+                  <span className={`ml-auto w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+                </div>
+                <div className="mb-2">
+                  <span className="text-xs text-slate-500">Refinery utilisation</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div className={`h-full ${colors.bg} rounded-full`} style={{ width: `${card.utilisation}%` }} />
+                    </div>
+                    <span className="text-xs font-mono text-slate-300">{card.utilisation}%</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 italic">{card.note}</p>
+              </div>
+            );
+          })}
+        </div>
+        <DataMeta source="JODI Oil World Database" asOf={suppliers.jodi_last_updated} refresh="Monthly (~20th)" />
+      </div>
+
+      {/* 3. Ship cancellations — full width */}
+      <div className="mb-8">
+        <ShipCancellations shipping={shipping} />
       </div>
 
       {/* Distribution funnel */}
       <div className="mb-8">
         <DistributionFunnel />
-      </div>
-
-      {/* Supplier detail cards */}
-      <div className="mb-8">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Top Supplier Countries (JODI data)</h3>
-        <SupplierCards suppliers={suppliers} />
-        <DataMeta source="JODI Oil World Database" asOf={suppliers.jodi_last_updated} refresh="Monthly (~20th)" />
-      </div>
-
-      {/* Domestic refineries */}
-      <div className="bg-slate-800/30 rounded-xl border border-amber-500/20 p-6">
-        <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-4">
-          🏭 Australia&apos;s Remaining Refineries (2 of originally 8)
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {suppliers.domestic_refineries.map((r) => (
-            <div key={r.name} className="flex items-start gap-3">
-              <span className="text-emerald-400 mt-1">●</span>
-              <div>
-                <p className="text-white font-medium">{r.name}</p>
-                <p className="text-xs text-slate-400">{r.location} · {r.capacity_bpd.toLocaleString()} bbl/day</p>
-                <p className="text-xs text-slate-500 italic">{r.note}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <DataMeta source="DCCEEW" refresh="Static (event-driven)" />
       </div>
     </section>
   );
