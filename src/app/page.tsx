@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import Footer from "@/components/Footer";
 import { DataMeta, SeverityBadge } from "@/components/ui";
-import { getDaysSupplyStatus, getStatusColor, getHormuzColor, formatLitres, formatCentsPerLitre } from "@/lib/utils";
+import { getDaysSupplyStatus, getStatusColor, getHormuzColor, formatLitres, formatCentsPerLitre, getRefineryUtilisationStatus } from "@/lib/utils";
 import type {
   Snapshot,
   StocksHistory,
@@ -28,6 +28,7 @@ import type {
   PriceDecompositionData,
   RefineryHistory,
   GlobalStatusData,
+  DemandData,
 } from "@/lib/types";
 
 /* ════════════════════════════════════════════════════════════════════
@@ -47,14 +48,7 @@ interface DashboardData {
   priceDecomposition: PriceDecompositionData;
   refineryHistory: RefineryHistory;
   globalStatus: GlobalStatusData;
-}
-
-interface NewsItem {
-  title: string;
-  url: string;
-  source: string;
-  date: string;
-  summary: string;
+  demand: DemandData;
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -71,12 +65,53 @@ function StatusDot({ status }: { status: "green" | "amber" | "red" }) {
   );
 }
 
-function StubCard({ title }: { title: string }) {
+function DemandSparkCard({
+  title,
+  data,
+  color,
+  gradId,
+}: {
+  title: string;
+  data: { week: string; demand_ml: number }[];
+  color: string;
+  gradId: string;
+}) {
+  // Show last 12 weeks
+  const recent = data.slice(-12);
+  const current = recent[recent.length - 1];
+  const chartData = recent.map((d) => ({ week: d.week.slice(5), ml: d.demand_ml }));
+
   return (
-    <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 border-dashed p-6 flex flex-col items-center justify-center min-h-[120px]">
-      <span className="text-slate-600 text-sm">📊</span>
-      <p className="text-sm font-medium text-slate-500 mt-2">{title}</p>
-      <p className="text-xs text-slate-600 mt-1">Data coming soon</p>
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">{title}</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">STUB DATA</span>
+          <span className="text-2xl font-bold font-mono text-white">{current?.demand_ml ?? "—"}<span className="text-sm font-normal text-slate-500"> ML</span></span>
+        </div>
+      </div>
+      <DataMeta source="Stub — AIP Weekly Oil Statistics" asOf="2026-03-23" refresh="Weekly (pending)" />
+      <div className="mt-3">
+        <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-2">12-week trend</h4>
+        <ResponsiveContainer width="100%" height={80}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="week" hide />
+            <YAxis hide domain={["dataMin - 20", "dataMax + 20"]} />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px", color: "#e2e8f0" }}
+              formatter={(v) => [`${v} ML`, "Demand"]}
+              labelFormatter={(l) => `Week of ${l}`}
+            />
+            <Area type="monotone" dataKey="ml" stroke={color} strokeWidth={2} fill={`url(#${gradId})`} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
@@ -90,11 +125,13 @@ function Layer1Detail({
   stocksHistory,
   retailPrices,
   outages,
+  demand,
 }: {
   snapshot: Snapshot;
   stocksHistory: StocksHistory;
   retailPrices: RetailPrices;
   outages: OutagesData;
+  demand: DemandData;
 }) {
   const { domestic } = snapshot;
   const petrolMsoMin = Math.round(domestic.petrol_days_supply / (1 + domestic.petrol_pct_above_mso / 100));
@@ -163,10 +200,10 @@ function Layer1Detail({
         <DaysOfSupplyCard value={domestic.diesel_days_supply} msoMin={dieselMsoMin} ieaTarget={domestic.iea_obligation_days} label="Diesel — Days of Supply" headroomPct={domestic.diesel_pct_above_mso} trendData={stocksHistory.diesel} color="#ef4444" gradId="diesel-supply-grad" />
       </div>
 
-      {/* Row 3: Demand stubs */}
+      {/* Row 3: Weekly demand sparklines */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <StubCard title="Weekly Petrol Demand in Australia" />
-        <StubCard title="Weekly Diesel Demand in Australia" />
+        <DemandSparkCard title="Weekly Petrol Demand" data={demand.petrol_weekly_ml} color="#f59e0b" gradId="petrol-demand-grad" />
+        <DemandSparkCard title="Weekly Diesel Demand" data={demand.diesel_weekly_ml} color="#ef4444" gradId="diesel-demand-grad" />
       </div>
 
       {/* Row 4: Station outages — full width */}
@@ -315,19 +352,31 @@ function Layer2Detail({
 }) {
   // Build the 6 refinery utilisation cards: 5 source markets + Australia last
   const sourceCountries = ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"];
-  const refineryCards: { flag: string; country: string; utilisation: number; status: string; note: string }[] = [];
+  const refineryCards: { flag: string; country: string; utilisation: number; status: "green" | "amber" | "red"; note: string; capacity?: string }[] = [];
 
-  // Source markets first
+  // Source markets first — calculate RAG status from utilisation_pct consistently
   for (const name of sourceCountries) {
     const s = suppliers.suppliers.find((sup) => sup.country === name);
     if (s) {
-      refineryCards.push({ flag: s.flag, country: s.country, utilisation: s.refinery_utilisation_pct, status: s.status, note: s.note });
+      refineryCards.push({
+        flag: s.flag,
+        country: s.country,
+        utilisation: s.refinery_utilisation_pct,
+        status: getRefineryUtilisationStatus(s.refinery_utilisation_pct),
+        note: s.note,
+      });
     }
   }
 
-  // Australia last
-  const ausUtil = suppliers.domestic_refineries.length > 0 ? 100 : 0;
-  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: ausUtil, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
+  // Australia last — amber (operating refineries at ~85% but only 20% domestic coverage)
+  refineryCards.push({
+    flag: "🇦🇺",
+    country: "Australia",
+    utilisation: 85,
+    status: "amber",
+    note: "Two refineries remain operational — Ampol Lytton (Brisbane, 109,000 bbl/day) and Viva Geelong (120,000 bbl/day) — supplying ~20% of domestic demand. Six refineries closed between 2003–2014 as cheaper Asian imports made local refining unviable.",
+    capacity: "229,000 bbl/day",
+  });
 
   return (
     <div className="space-y-6 animate-in">
@@ -339,7 +388,7 @@ function Layer2Detail({
         <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Refinery Utilisation</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {refineryCards.map((card) => {
-            const colors = getStatusColor(card.status as "green" | "amber" | "red");
+            const colors = getStatusColor(card.status);
             return (
               <div key={card.country} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
@@ -356,6 +405,12 @@ function Layer2Detail({
                     <span className="text-xs font-mono text-slate-300">{card.utilisation}%</span>
                   </div>
                 </div>
+                {card.capacity && (
+                  <div className="mb-2">
+                    <span className="text-xs text-slate-500">Domestic capacity: </span>
+                    <span className="text-xs font-mono text-slate-300 font-semibold">{card.capacity}</span>
+                  </div>
+                )}
                 <p className="text-xs text-slate-500 italic">{card.note}</p>
               </div>
             );
@@ -439,120 +494,155 @@ function ShipCancellations({ shipping }: { shipping: ShippingData }) {
   );
 }
 
-function DoubleHopMap() {
+function DoubleHopMapSVGInline() {
   return (
-    <div className="bg-slate-800/50 rounded-xl border border-amber-500/20 p-6">
-      <h3 className="text-lg font-semibold text-amber-400 mb-1">
-        🗺️ &quot;The Double Hop&quot; — Why a war in Iran empties Australian servos
-      </h3>
-      <p className="text-xs text-slate-500 mb-2">
-        Australia&apos;s fuel doesn&apos;t come from the Middle East directly. It comes from Asian refineries that get 60–70% of their crude through Hormuz.
-      </p>
-      <div className="bg-red-500/10 rounded-lg px-3 py-2 mb-4 border border-red-500/20">
-        <p className="text-xs text-red-400 font-medium">
-          ⚠️ Top 5 refining countries (South Korea, Singapore, Malaysia, Taiwan, India) source 60–70% of their crude oil through the Strait of Hormuz.
+    <svg viewBox="0 0 920 400" className="w-full h-auto" aria-label="The Double Hop supply chain from Middle East through Asian refineries to Australia">
+      <defs>
+        <style>{`
+          .hop-flow { animation: hop-dash 3s linear infinite; }
+          @keyframes hop-dash { to { stroke-dashoffset: -30; } }
+          .hop-pulse { animation: hop-p 2s ease-in-out infinite; }
+          @keyframes hop-p { 0%,100% { opacity:0.6 } 50% { opacity:1 } }
+        `}</style>
+      </defs>
+
+      <path d="M 131,170 Q 165,175 195,191" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeDasharray="8 6" className="hop-flow" opacity="0.8" />
+      <path d="M 250,191 Q 340,80 428,70" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 250,191 Q 340,130 428,130" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 250,191 Q 340,195 428,195" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 250,191 Q 340,250 428,260" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 250,191 Q 340,300 428,320" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 472,70 Q 590,140 716,240" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 472,130 Q 590,175 716,243" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 472,195 Q 590,220 716,248" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 472,260 Q 590,260 716,252" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+      <path d="M 472,320 Q 590,290 716,258" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
+
+      <text x="105" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">CRUDE SOURCE</text>
+      <text x="350" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">TOP 5 REFINERIES</text>
+      <text x="750" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">AUSTRALIA</text>
+
+      <circle cx="105" cy="170" r="26" fill="#1e293b" stroke="#ef4444" strokeWidth="2" />
+      <text x="105" y="167" textAnchor="middle" fill="#ef4444" fontSize="20">🛢️</text>
+      <text x="105" y="183" textAnchor="middle" fill="#94a3b8" fontSize="7" fontWeight="bold">CRUDE</text>
+      <text x="105" y="210" textAnchor="middle" fill="#cbd5e1" fontSize="10" fontWeight="600">Middle East</text>
+
+      <rect x="195" y="175" width="55" height="32" rx="6" fill="#7f1d1d" stroke="#ef4444" strokeWidth="2" />
+      <text x="222" y="190" textAnchor="middle" fill="#fca5a5" fontSize="8" fontWeight="bold">HORMUZ</text>
+      <text x="222" y="201" textAnchor="middle" fill="#ef4444" fontSize="7">⚠ RESTRICTED</text>
+      <text x="222" y="222" textAnchor="middle" fill="#94a3b8" fontSize="8">20% global oil</text>
+
+      <circle cx="450" cy="70" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
+      <text x="450" y="67" textAnchor="middle" fill="white" fontSize="16">🇰🇷</text>
+      <text x="450" y="80" textAnchor="middle" fill="#94a3b8" fontSize="7">30%</text>
+      <text x="450" y="103" textAnchor="middle" fill="#cbd5e1" fontSize="9">S. Korea</text>
+
+      <circle cx="450" cy="130" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
+      <text x="450" y="127" textAnchor="middle" fill="white" fontSize="16">🇸🇬</text>
+      <text x="450" y="140" textAnchor="middle" fill="#94a3b8" fontSize="7">25%</text>
+      <text x="510" y="133" textAnchor="start" fill="#cbd5e1" fontSize="9">Singapore</text>
+
+      <circle cx="450" cy="195" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
+      <text x="450" y="192" textAnchor="middle" fill="white" fontSize="16">🇲🇾</text>
+      <text x="450" y="205" textAnchor="middle" fill="#94a3b8" fontSize="7">15%</text>
+      <text x="510" y="198" textAnchor="start" fill="#cbd5e1" fontSize="9">Malaysia</text>
+
+      <circle cx="450" cy="260" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
+      <text x="450" y="257" textAnchor="middle" fill="white" fontSize="16">🇹🇼</text>
+      <text x="450" y="270" textAnchor="middle" fill="#94a3b8" fontSize="7">10%</text>
+      <text x="510" y="263" textAnchor="start" fill="#cbd5e1" fontSize="9">Taiwan</text>
+
+      <circle cx="450" cy="320" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
+      <text x="450" y="317" textAnchor="middle" fill="white" fontSize="16">🇮🇳</text>
+      <text x="450" y="330" textAnchor="middle" fill="#94a3b8" fontSize="7">5%</text>
+      <text x="510" y="323" textAnchor="start" fill="#cbd5e1" fontSize="9">India</text>
+
+      <text x="590" y="95" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">~15 days</text>
+      <text x="600" y="175" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">8–14 days</text>
+      <text x="600" y="275" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">~7 days</text>
+
+      <circle cx="750" cy="250" r="34" fill="#1e293b" stroke="#3b82f6" strokeWidth="3" />
+      <text x="750" y="245" textAnchor="middle" fill="white" fontSize="24">🇦🇺</text>
+      <text x="750" y="264" textAnchor="middle" fill="#93c5fd" fontSize="8" fontWeight="bold">AUSTRALIA</text>
+
+      <path d="M 784,250 L 840,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
+      <text x="845" y="243" textAnchor="start" fill="white" fontSize="12">🚛</text>
+      <text x="845" y="258" textAnchor="start" fill="#64748b" fontSize="8">hours</text>
+      <path d="M 870,250 L 905,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
+      <text x="903" y="243" textAnchor="start" fill="white" fontSize="11">⛽</text>
+      <text x="897" y="258" textAnchor="start" fill="#64748b" fontSize="7">servo</text>
+
+      <text x="750" y="330" textAnchor="middle" fill="#64748b" fontSize="8">Emergency: US → Aus: 55–60 days</text>
+    </svg>
+  );
+}
+
+function DoubleHopMap() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  return (
+    <>
+      <div className="bg-slate-800/50 rounded-xl border border-amber-500/20 p-6 relative">
+        <h3 className="text-lg font-semibold text-amber-400 mb-1">
+          🗺️ &quot;The Double Hop&quot; — Why a war in Iran empties Australian servos
+        </h3>
+        <p className="text-xs text-slate-500 mb-2">
+          Australia&apos;s fuel doesn&apos;t come from the Middle East directly. It comes from Asian refineries that get 60–70% of their crude through Hormuz.
+        </p>
+        <div className="bg-red-500/10 rounded-lg px-3 py-2 mb-4 border border-red-500/20">
+          <p className="text-xs text-red-400 font-medium">
+            ⚠️ Top 5 refining countries (South Korea, Singapore, Malaysia, Taiwan, India) source 60–70% of their crude oil through the Strait of Hormuz.
+          </p>
+        </div>
+
+        {/* Fullscreen button */}
+        <button
+          onClick={() => setIsFullscreen(true)}
+          className="absolute top-4 right-4 p-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 border border-slate-600/50 transition-colors cursor-pointer"
+          title="View fullscreen"
+          aria-label="View Double Hop map fullscreen"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-slate-400">
+            <path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        <DoubleHopMapSVGInline />
+
+        <p className="text-sm text-slate-400 mt-4 leading-relaxed">
+          <strong className="text-white">Key insight:</strong> When Hormuz is restricted, it doesn&apos;t matter that Australia has no direct oil trade with Iran.
+          Our suppliers&apos; suppliers are affected. This is why a conflict 12,000km away can empty a servo in rural NSW within weeks.
         </p>
       </div>
 
-      <svg viewBox="0 0 920 400" className="w-full h-auto" aria-label="The Double Hop supply chain from Middle East through Asian refineries to Australia">
-        <defs>
-          <style>{`
-            .hop-flow { animation: hop-dash 3s linear infinite; }
-            @keyframes hop-dash { to { stroke-dashoffset: -30; } }
-            .hop-pulse { animation: hop-p 2s ease-in-out infinite; }
-            @keyframes hop-p { 0%,100% { opacity:0.6 } 50% { opacity:1 } }
-          `}</style>
-        </defs>
-
-        {/* Flow paths — crude to Hormuz (connects circle edge r=26 to rect left edge) */}
-        <path d="M 131,170 Q 165,175 195,191" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeDasharray="8 6" className="hop-flow" opacity="0.8" />
-        {/* Hormuz to refineries (from rect right edge x=250 to circle left edge cx-r=428) */}
-        <path d="M 250,191 Q 340,80 428,70" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,191 Q 340,130 428,130" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,191 Q 340,195 428,195" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,191 Q 340,250 428,260" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 250,191 Q 340,300 428,320" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        {/* Refineries to Australia (from circle right edge cx+r=472 to Australia circle left edge 750-34=716) */}
-        <path d="M 472,70 Q 590,140 716,240" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 472,130 Q 590,175 716,243" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 472,195 Q 590,220 716,248" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 472,260 Q 590,260 716,252" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-        <path d="M 472,320 Q 590,290 716,258" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8 6" className="hop-flow" opacity="0.7" />
-
-        {/* Column labels */}
-        <text x="105" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">CRUDE SOURCE</text>
-        <text x="350" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">TOP 5 REFINERIES</text>
-        <text x="750" y="25" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="700">AUSTRALIA</text>
-
-        {/* Middle East */}
-        <circle cx="105" cy="170" r="26" fill="#1e293b" stroke="#ef4444" strokeWidth="2" />
-        <text x="105" y="167" textAnchor="middle" fill="#ef4444" fontSize="20">🛢️</text>
-        <text x="105" y="183" textAnchor="middle" fill="#94a3b8" fontSize="7" fontWeight="bold">CRUDE</text>
-        <text x="105" y="210" textAnchor="middle" fill="#cbd5e1" fontSize="10" fontWeight="600">Middle East</text>
-
-        {/* Hormuz */}
-        <rect x="195" y="175" width="55" height="32" rx="6" fill="#7f1d1d" stroke="#ef4444" strokeWidth="2" />
-        <text x="222" y="190" textAnchor="middle" fill="#fca5a5" fontSize="8" fontWeight="bold">HORMUZ</text>
-        <text x="222" y="201" textAnchor="middle" fill="#ef4444" fontSize="7">⚠ RESTRICTED</text>
-        <text x="222" y="222" textAnchor="middle" fill="#94a3b8" fontSize="8">20% global oil</text>
-
-        {/* S. Korea */}
-        <circle cx="450" cy="70" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="67" textAnchor="middle" fill="white" fontSize="16">🇰🇷</text>
-        <text x="450" y="80" textAnchor="middle" fill="#94a3b8" fontSize="7">30%</text>
-        <text x="450" y="103" textAnchor="middle" fill="#cbd5e1" fontSize="9">S. Korea</text>
-
-        {/* Singapore */}
-        <circle cx="450" cy="130" r="22" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="127" textAnchor="middle" fill="white" fontSize="16">🇸🇬</text>
-        <text x="450" y="140" textAnchor="middle" fill="#94a3b8" fontSize="7">25%</text>
-        <text x="510" y="133" textAnchor="start" fill="#cbd5e1" fontSize="9">Singapore</text>
-
-        {/* Malaysia */}
-        <circle cx="450" cy="195" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="192" textAnchor="middle" fill="white" fontSize="16">🇲🇾</text>
-        <text x="450" y="205" textAnchor="middle" fill="#94a3b8" fontSize="7">15%</text>
-        <text x="510" y="198" textAnchor="start" fill="#cbd5e1" fontSize="9">Malaysia</text>
-
-        {/* Taiwan */}
-        <circle cx="450" cy="260" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="257" textAnchor="middle" fill="white" fontSize="16">🇹🇼</text>
-        <text x="450" y="270" textAnchor="middle" fill="#94a3b8" fontSize="7">10%</text>
-        <text x="510" y="263" textAnchor="start" fill="#cbd5e1" fontSize="9">Taiwan</text>
-
-        {/* India */}
-        <circle cx="450" cy="320" r="22" fill="#1e293b" stroke="#22c55e" strokeWidth="2" className="hop-pulse" />
-        <text x="450" y="317" textAnchor="middle" fill="white" fontSize="16">🇮🇳</text>
-        <text x="450" y="330" textAnchor="middle" fill="#94a3b8" fontSize="7">5%</text>
-        <text x="510" y="323" textAnchor="start" fill="#cbd5e1" fontSize="9">India</text>
-
-        {/* Transit time labels — larger font, lighter colour, positioned clear of paths */}
-        <text x="590" y="95" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">~15 days</text>
-        <text x="600" y="175" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">8–14 days</text>
-        <text x="600" y="275" textAnchor="middle" fill="#94a3b8" fontSize="11" fontStyle="italic" fontWeight="500">~7 days</text>
-
-        {/* Australia */}
-        <circle cx="750" cy="250" r="34" fill="#1e293b" stroke="#3b82f6" strokeWidth="3" />
-        <text x="750" y="245" textAnchor="middle" fill="white" fontSize="24">🇦🇺</text>
-        <text x="750" y="264" textAnchor="middle" fill="#93c5fd" fontSize="8" fontWeight="bold">AUSTRALIA</text>
-
-        {/* Final mile */}
-        <path d="M 784,250 L 840,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
-        <text x="845" y="243" textAnchor="start" fill="white" fontSize="12">🚛</text>
-        <text x="845" y="258" textAnchor="start" fill="#64748b" fontSize="8">hours</text>
-        <path d="M 870,250 L 905,250" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 3" />
-        <text x="903" y="243" textAnchor="start" fill="white" fontSize="11">⛽</text>
-        <text x="897" y="258" textAnchor="start" fill="#64748b" fontSize="7">servo</text>
-
-        {/* Emergency US route */}
-        <text x="750" y="330" textAnchor="middle" fill="#64748b" fontSize="8">Emergency: US → Aus: 55–60 days</text>
-      </svg>
-
-      <p className="text-sm text-slate-400 mt-4 leading-relaxed">
-        <strong className="text-white">Key insight:</strong> When Hormuz is restricted, it doesn&apos;t matter that Australia has no direct oil trade with Iran.
-        Our suppliers&apos; suppliers are affected. This is why a conflict 12,000km away can empty a servo in rural NSW within weeks.
-      </p>
-    </div>
+      {/* Fullscreen modal overlay */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/95 flex flex-col items-center justify-center p-4"
+          onClick={() => setIsFullscreen(false)}
+        >
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className="absolute top-4 right-4 p-3 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors cursor-pointer z-10"
+            aria-label="Close fullscreen"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-white">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-amber-400 mb-4 text-center">
+              🗺️ &quot;The Double Hop&quot; — Why a war in Iran empties Australian servos
+            </h3>
+            <DoubleHopMapSVGInline />
+            <p className="text-sm text-slate-400 mt-4 leading-relaxed text-center max-w-3xl mx-auto">
+              <strong className="text-white">Key insight:</strong> When Hormuz is restricted, it doesn&apos;t matter that Australia has no direct oil trade with Iran.
+              Our suppliers&apos; suppliers are affected. This is why a conflict 12,000km away can empty a servo in rural NSW within weeks.
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -864,14 +954,18 @@ function Layer4Detail({ kalshiMarkets, kalshiHistory }: { kalshiMarkets: KalshiO
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   NEWS / TIMELINE FEED
+   NEWS / TIMELINE FEED (static from timeline.json)
    ════════════════════════════════════════════════════════════════════ */
 
-function NewsFeed({ news, fetchedAt }: { news: NewsItem[]; fetchedAt: string | null }) {
-  if (news.length === 0) {
+function TimelineFeed({ timeline }: { timeline: TimelineData }) {
+  const events = [...timeline.events]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 20);
+
+  if (events.length === 0) {
     return (
       <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-8 text-center">
-        <p className="text-slate-500">No news items available. RSS feeds may be temporarily unavailable.</p>
+        <p className="text-slate-500">No timeline events available.</p>
       </div>
     );
   }
@@ -879,29 +973,19 @@ function NewsFeed({ news, fetchedAt }: { news: NewsItem[]; fetchedAt: string | n
   return (
     <div className="bg-slate-800/30 rounded-xl border border-slate-700/30 p-6">
       <div className="space-y-3">
-        {news.map((item, i) => {
-          const date = new Date(item.date);
-          const dateStr = date.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
-
-          return (
-            <div key={`${item.url}-${i}`} className="flex gap-4 items-start">
-              <span className="text-xs font-mono text-slate-500 whitespace-nowrap mt-0.5 w-16 flex-shrink-0 text-right">
-                {dateStr}
-              </span>
-              <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-slate-300 hover:text-amber-400 transition-colors">
-                  {item.title}
-                </a>
-                <span className="text-[10px] text-slate-600 ml-2">({item.source})</span>
-              </div>
+        {events.map((item, i) => (
+          <div key={`${item.date}-${i}`} className="flex gap-4 items-start">
+            <span className="text-xs font-mono text-slate-500 whitespace-nowrap mt-0.5 w-20 flex-shrink-0 text-right">
+              {item.date.slice(5)}
+            </span>
+            <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <span className="text-sm text-slate-300">{item.event}</span>
+              <span className="text-[10px] text-slate-600 ml-2">({item.source})</span>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-      {fetchedAt && (
-        <p className="text-[10px] text-slate-600 mt-4 text-right">Last updated: {new Date(fetchedAt).toLocaleString("en-AU")}</p>
-      )}
     </div>
   );
 }
@@ -1004,10 +1088,10 @@ function buildLayerConfigs(data: DashboardData, liveBrentPrice: number | null, k
   const malaysia = supplierEntries.find((s) => s.country === "Malaysia");
   const taiwan = supplierEntries.find((s) => s.country === "Taiwan");
 
-  const koreaStatus = korea?.status ?? "amber";
-  const singaporeStatus = singapore?.status ?? "amber";
-  const malaysiaStatus = malaysia?.status ?? "green";
-  const domesticStatus: "green" | "amber" | "red" = "green"; // both refineries operational
+  const koreaStatus = korea ? getRefineryUtilisationStatus(korea.refinery_utilisation_pct) : "amber";
+  const singaporeStatus = singapore ? getRefineryUtilisationStatus(singapore.refinery_utilisation_pct) : "amber";
+  const malaysiaStatus = malaysia ? getRefineryUtilisationStatus(malaysia.refinery_utilisation_pct) : "green";
+  const domesticStatus: "green" | "amber" | "red" = "amber"; // both refineries operational but only ~20% domestic coverage
 
   const hormuzColor = (snap.global.hormuz_status === "open" ? "green" : "red") as "green" | "amber" | "red";
   const brentStatus: "green" | "amber" | "red" = brentPrice > 90 ? "red" : brentPrice > 75 ? "amber" : "green";
@@ -1033,7 +1117,7 @@ function buildLayerConfigs(data: DashboardData, liveBrentPrice: number | null, k
         { label: "S. Korea refineries", value: `${korea?.refinery_utilisation_pct ?? 0}%`, status: koreaStatus as "green" | "amber" | "red" },
         { label: "Singapore refineries", value: `${singapore?.refinery_utilisation_pct ?? 0}%`, status: singaporeStatus as "green" | "amber" | "red" },
         { label: "Malaysia refineries", value: `${malaysia?.refinery_utilisation_pct ?? 0}%`, status: malaysiaStatus as "green" | "amber" | "red" },
-        { label: "Australia refineries", value: "100%", status: domesticStatus },
+        { label: "Australia refineries", value: "85%", status: domesticStatus },
       ],
     },
     {
@@ -1143,8 +1227,6 @@ export default function Home() {
   const [liveBrentPrice, setLiveBrentPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeLayer, setActiveLayer] = useState(1);
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [newsFetchedAt, setNewsFetchedAt] = useState<string | null>(null);
   const [kalshiMarkets, setKalshiMarkets] = useState<KalshiOdds[] | null>(null);
   const [kalshiHistory, setKalshiHistory] = useState<Record<string, KalshiHistoryPoint[]> | null>(null);
 
@@ -1155,16 +1237,19 @@ export default function Home() {
           "snapshot.json", "stocks-history.json", "oil-prices.json", "retail-prices.json",
           "suppliers.json", "outages.json", "import-sources.json", "shipping.json",
           "timeline.json", "price-decomposition.json", "refinery-history.json", "global-status.json",
+          "demand.json",
         ];
         const responses = await Promise.all(files.map((f) => fetch(`/data/${f}`)));
         const [
           snapshot, stocksHistory, oilPrices, retailPrices, suppliers, outages,
           importSources, shipping, timeline, priceDecomposition, refineryHistory, globalStatus,
+          demand,
         ] = await Promise.all(responses.map((r) => r.json()));
 
         setData({
           snapshot, stocksHistory, oilPrices, retailPrices, suppliers, outages,
           importSources, shipping, timeline, priceDecomposition, refineryHistory, globalStatus,
+          demand,
         });
       } catch (error) {
         console.error("Failed to load data:", error);
@@ -1189,23 +1274,6 @@ export default function Home() {
     fetchLivePrice();
     const interval = setInterval(fetchLivePrice, 15 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Fetch news
-  useEffect(() => {
-    async function fetchNews() {
-      try {
-        const res = await fetch("/api/news");
-        const d = await res.json();
-        if (d.items) {
-          setNews(d.items);
-          setNewsFetchedAt(d.fetched_at);
-        }
-      } catch (error) {
-        console.error("Failed to fetch news:", error);
-      }
-    }
-    fetchNews();
   }, []);
 
   // Fetch Kalshi prediction market odds
@@ -1307,6 +1375,7 @@ export default function Home() {
               stocksHistory={data.stocksHistory}
               retailPrices={data.retailPrices}
               outages={data.outages}
+              demand={data.demand}
             />
           )}
           {activeLayer === 2 && (
@@ -1336,10 +1405,10 @@ export default function Home() {
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Feed</span>
               <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">News &amp; Events</span>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Latest News</h2>
-            <p className="text-slate-400 text-sm">Aggregated from ABC News and Reuters commodities feeds.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Crisis Timeline</h2>
+            <p className="text-slate-400 text-sm">Key events in the 2026 fuel supply crisis, sourced from government and media reports.</p>
           </div>
-          <NewsFeed news={news} fetchedAt={newsFetchedAt} />
+          <TimelineFeed timeline={data.timeline} />
         </div>
       </section>
 

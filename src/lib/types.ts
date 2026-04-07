@@ -188,6 +188,19 @@ export interface SuppliersData {
   domestic_refineries: DomesticRefinery[];
 }
 
+export interface DemandWeek {
+  week: string;
+  demand_ml: number;
+}
+
+export interface DemandData {
+  note: string;
+  petrol_weekly_ml: DemandWeek[];
+  diesel_weekly_ml: DemandWeek[];
+  source: string;
+  as_of: string;
+}
+
 export interface GlobalStatusData {
   hormuz: {
     status: string;

@@ -54,6 +54,12 @@ export function formatLitres(litres: number): string {
   return `${litres.toLocaleString()} L`;
 }
 
+export function getRefineryUtilisationStatus(pct: number): "green" | "amber" | "red" {
+  if (pct >= 85) return "green";
+  if (pct >= 70) return "amber";
+  return "red";
+}
+
 export function formatPrice(cpl: number): string {
   return `$${(cpl / 100).toFixed(2)}`;
 }

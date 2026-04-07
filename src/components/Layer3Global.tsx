@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -18,18 +19,10 @@ interface Layer3Props {
   globalStatus: GlobalStatusData;
 }
 
-/* ─── The Double Hop — animated SVG ─── */
-function DoubleHopMap() {
+/* ─── Double Hop SVG content (shared between inline and fullscreen) ─── */
+function DoubleHopSVG() {
   return (
-    <div className="bg-slate-800/50 rounded-xl border border-amber-500/20 p-6">
-      <h3 className="text-lg font-semibold text-amber-400 mb-1">
-        🗺️ &quot;The Double Hop&quot; — Why a war in Iran empties Australian servos
-      </h3>
-      <p className="text-xs text-slate-500 mb-4">
-        Australia&apos;s fuel doesn&apos;t come from the Middle East directly. It comes from Asian refineries that get 60–70% of their crude through Hormuz.
-      </p>
-
-      <svg viewBox="0 0 920 400" className="w-full h-auto" aria-label="The Double Hop supply chain from Middle East through Asian refineries to Australia">
+    <svg viewBox="0 0 920 400" className="w-full h-auto" aria-label="The Double Hop supply chain from Middle East through Asian refineries to Australia">
         <defs>
           <style>{`
             .hop-flow { animation: hop-dash 3s linear infinite; }
@@ -111,12 +104,71 @@ function DoubleHopMap() {
         {/* Emergency US route */}
         <text x="750" y="330" textAnchor="middle" fill="#64748b" fontSize="8">Emergency: US → Aus: 55–60 days</text>
       </svg>
+  );
+}
 
-      <p className="text-sm text-slate-400 mt-4 leading-relaxed">
-        <strong className="text-white">Key insight:</strong> When Hormuz is restricted, it doesn&apos;t matter that Australia has no direct oil trade with Iran.
-        Our suppliers&apos; suppliers are affected. This is why a conflict 12,000km away can empty a servo in rural NSW within weeks.
-      </p>
-    </div>
+/* ─── The Double Hop — animated SVG with fullscreen modal ─── */
+function DoubleHopMap() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  return (
+    <>
+      <div className="bg-slate-800/50 rounded-xl border border-amber-500/20 p-6 relative">
+        <h3 className="text-lg font-semibold text-amber-400 mb-1">
+          🗺️ &quot;The Double Hop&quot; — Why a war in Iran empties Australian servos
+        </h3>
+        <p className="text-xs text-slate-500 mb-4">
+          Australia&apos;s fuel doesn&apos;t come from the Middle East directly. It comes from Asian refineries that get 60–70% of their crude through Hormuz.
+        </p>
+
+        {/* Fullscreen button */}
+        <button
+          onClick={() => setIsFullscreen(true)}
+          className="absolute top-4 right-4 p-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 border border-slate-600/50 transition-colors cursor-pointer"
+          title="View fullscreen"
+          aria-label="View Double Hop map fullscreen"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-slate-400">
+            <path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        <DoubleHopSVG />
+
+        <p className="text-sm text-slate-400 mt-4 leading-relaxed">
+          <strong className="text-white">Key insight:</strong> When Hormuz is restricted, it doesn&apos;t matter that Australia has no direct oil trade with Iran.
+          Our suppliers&apos; suppliers are affected. This is why a conflict 12,000km away can empty a servo in rural NSW within weeks.
+        </p>
+      </div>
+
+      {/* Fullscreen modal overlay */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/95 flex flex-col items-center justify-center p-4"
+          onClick={() => setIsFullscreen(false)}
+        >
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className="absolute top-4 right-4 p-3 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors cursor-pointer z-10"
+            aria-label="Close fullscreen"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-white">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-amber-400 mb-4 text-center">
+              🗺️ &quot;The Double Hop&quot; — Why a war in Iran empties Australian servos
+            </h3>
+            <DoubleHopSVG />
+            <p className="text-sm text-slate-400 mt-4 leading-relaxed text-center max-w-3xl mx-auto">
+              <strong className="text-white">Key insight:</strong> When Hormuz is restricted, it doesn&apos;t matter that Australia has no direct oil trade with Iran.
+              Our suppliers&apos; suppliers are affected. This is why a conflict 12,000km away can empty a servo in rural NSW within weeks.
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -211,12 +263,15 @@ export default function Layer3Global({ snapshot, oilPrices, liveBrentPrice, time
         </div>
       </div>
 
-      {/* Crisis timeline from JSON */}
+      {/* Crisis timeline from static JSON — max 20 most recent, sorted by date descending */}
       <div className="bg-slate-800/30 rounded-xl border border-slate-700/30 p-6">
         <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-4">📅 Crisis Timeline</h3>
         <div className="space-y-3">
-          {timeline.events.map((item) => (
-            <div key={item.date} className="flex gap-4 items-start">
+          {[...timeline.events]
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .slice(0, 20)
+            .map((item, i) => (
+            <div key={`${item.date}-${i}`} className="flex gap-4 items-start">
               <span className="text-xs font-mono text-slate-500 whitespace-nowrap mt-0.5 w-24 flex-shrink-0">
                 {item.date.slice(5)}
               </span>

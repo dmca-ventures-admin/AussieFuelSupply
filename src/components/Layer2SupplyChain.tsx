@@ -2,7 +2,7 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import type { Snapshot, SuppliersData, ImportSourcesData, ShippingData } from "@/lib/types";
-import { getStatusColor } from "@/lib/utils";
+import { getStatusColor, getRefineryUtilisationStatus } from "@/lib/utils";
 import { DataMeta, Explainer, SectionHeading } from "@/components/ui";
 
 interface Layer2Props {
@@ -148,18 +148,31 @@ function DistributionFunnel() {
 export default function Layer2SupplyChain({ snapshot, suppliers, importSources, shipping }: Layer2Props) {
   // Build 6 refinery utilisation cards: 5 source markets + Australia last
   const sourceCountries = ["South Korea", "Singapore", "Malaysia", "Taiwan", "India"];
-  const refineryCards: { flag: string; country: string; utilisation: number; status: string; note: string }[] = [];
+  const refineryCards: { flag: string; country: string; utilisation: number; status: "green" | "amber" | "red"; note: string; capacity?: string }[] = [];
 
-  // Source markets first
+  // Source markets first — calculate RAG status from utilisation_pct consistently
   for (const name of sourceCountries) {
     const s = suppliers.suppliers.find((sup) => sup.country === name);
     if (s) {
-      refineryCards.push({ flag: s.flag, country: s.country, utilisation: s.refinery_utilisation_pct, status: s.status, note: s.note });
+      refineryCards.push({
+        flag: s.flag,
+        country: s.country,
+        utilisation: s.refinery_utilisation_pct,
+        status: getRefineryUtilisationStatus(s.refinery_utilisation_pct),
+        note: s.note,
+      });
     }
   }
 
-  // Australia last
-  refineryCards.push({ flag: "🇦🇺", country: "Australia", utilisation: 100, status: "green", note: "2 of 8 refineries remain (Lytton, Geelong)" });
+  // Australia last — amber (operating refineries at ~85% but only 20% domestic coverage)
+  refineryCards.push({
+    flag: "🇦🇺",
+    country: "Australia",
+    utilisation: 85,
+    status: "amber",
+    note: "Two refineries remain operational — Ampol Lytton (Brisbane, 109,000 bbl/day) and Viva Geelong (120,000 bbl/day) — supplying ~20% of domestic demand. Six refineries closed between 2003–2014 as cheaper Asian imports made local refining unviable.",
+    capacity: "229,000 bbl/day",
+  });
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -179,7 +192,7 @@ export default function Layer2SupplyChain({ snapshot, suppliers, importSources, 
         <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Refinery Utilisation</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {refineryCards.map((card) => {
-            const colors = getStatusColor(card.status as "green" | "amber" | "red");
+            const colors = getStatusColor(card.status);
             return (
               <div key={card.country} className={`bg-slate-800/50 rounded-xl border ${colors.border} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
@@ -196,6 +209,12 @@ export default function Layer2SupplyChain({ snapshot, suppliers, importSources, 
                     <span className="text-xs font-mono text-slate-300">{card.utilisation}%</span>
                   </div>
                 </div>
+                {card.capacity && (
+                  <div className="mb-2">
+                    <span className="text-xs text-slate-500">Domestic capacity: </span>
+                    <span className="text-xs font-mono text-slate-300 font-semibold">{card.capacity}</span>
+                  </div>
+                )}
                 <p className="text-xs text-slate-500 italic">{card.note}</p>
               </div>
             );
