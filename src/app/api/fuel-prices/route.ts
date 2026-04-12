@@ -27,7 +27,7 @@ export async function GET() {
 
   try {
     // Fetch all current fuel prices from NSW FuelCheck API
-    const res = await fetch("https://api.onegov.nsw.gov.au/FuelCheckApp/v2/fuel/prices", {
+    const res = await fetch("https://api.onegov.nsw.gov.au/FuelPriceCheck/v2/fuel/prices", {
       headers: {
         apikey: apiKey,
         "Content-Type": "application/json",

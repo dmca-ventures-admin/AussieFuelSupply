@@ -59,7 +59,7 @@ export function Explainer({
   );
 }
 
-/** Section heading with layer badge */
+/** Section heading badge */
 export function SectionHeading({
   layer,
   title,
@@ -69,15 +69,12 @@ export function SectionHeading({
   title: string;
   subtitle: string;
 }) {
-  const layerLabels = ["", "RIGHT NOW", "OUR SUPPLY CHAIN", "THE GLOBAL PICTURE", "UNDERSTANDING THE CRISIS"];
+  const sectionLabels = ["", "RIGHT NOW", "OUR SUPPLY CHAIN", "THE GLOBAL PICTURE", "UNDERSTANDING THE CRISIS"];
   return (
     <div className="mb-10">
       <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/60 border border-slate-700/40 mb-3">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-          Layer {layer}
-        </span>
         <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">
-          {layerLabels[layer]}
+          {sectionLabels[layer]}
         </span>
       </div>
       <h2 className="text-3xl font-bold text-white mb-3">{title}</h2>

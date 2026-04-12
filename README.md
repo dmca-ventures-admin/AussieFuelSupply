@@ -6,30 +6,40 @@ Real-time dashboard tracking Australia's fuel supply chain — from the Strait o
 
 ---
 
-## 🔴 Live Status (Seed Data — March 2026)
+## 🔴 Live Status (As of snapshot — see `/public/data/snapshot.json`)
 
 | Metric | Value | Status |
 |--------|-------|--------|
 | Petrol Supply | 38 days | 🟡 AMBER |
 | Diesel Supply | 30 days | 🟡 AMBER |
-| Brent Crude | $96.68 USD/bbl | 🔴 RED |
+| Brent Crude | updated daily via GitHub Actions | 🔴 RED |
 | Strait of Hormuz | Restricted | 🔴 RED |
-| Avg Petrol Price | 243.4¢/L | — |
-| Avg Diesel Price | 260.0¢/L | — |
+| Avg Petrol Price | updated daily via GitHub Actions | — |
+| Avg Diesel Price | updated daily via GitHub Actions | — |
+
+> Brent crude and retail prices are updated automatically each day via GitHub Actions. MSO stock levels require a manual update from the DCCEEW weekly report (Fridays).
 
 ---
 
 ## 📐 Architecture
 
-### Dashboard Sections (Supply Chain Left → Right)
+### Dashboard Layout
 
-1. **Hero Status Banner** — Traffic-light summary of key metrics
-2. **Domestic Stocks** — Gauge charts for petrol & diesel days of supply, trend sparklines, MSO explainer
-3. **Supply Chain Map** — Animated SVG: Middle East → Hormuz → South Korea/Singapore/Malaysia → Australia
-4. **Global Drivers** — Brent crude price chart, Hormuz status, IEA release, crisis timeline
-5. **Retail Impact** — Price trend charts, station outages by state, panic buying context, tips
-6. **Scenarios** — What-if analysis: 2 weeks / 1–3 months / 3+ months disruption
-7. **Footer** — Data sources, methodology, timestamps
+The dashboard uses a **4-column layer selector** as primary navigation. Users click a layer to expand its detail panel.
+
+| Layer | Name | Key Metrics |
+|-------|------|-------------|
+| 1 | **Domestic Situation** | Retail prices, days of supply (gauges + sparklines), station outages, weekly demand |
+| 2 | **Our Supply Chain** | Import source donut, refinery utilisation (6 countries), ship cancellations |
+| 3 | **Global Picture** | Double Hop SVG map, Strait of Hormuz status, Brent crude chart, IEA emergency release |
+| 4 | **Prediction Markets** | Kalshi odds for Hormuz normalisation (May/Jul 2026, Jan 2027), 30-day sparklines, scenario impacts |
+
+Below the layer selector: a **Crisis Timeline** feed (ABC News RSS, filtered for fuel/energy keywords) and an **FAQ** section.
+
+### Utility Pages
+
+- `/bug` — Report a bug (submits to GitHub Issues)
+- `/feedback` — Share feedback (submits to GitHub Issues)
 
 ### Tech Stack
 
@@ -46,21 +56,38 @@ Real-time dashboard tracking Australia's fuel supply chain — from the Strait o
 
 ```
 /public/data/
-├── snapshot.json          # Latest key metrics (weekly update)
-├── stocks-history.json    # 12-week petrol & diesel stock trends
-├── oil-prices.json        # 30-day Brent crude prices + events
-├── retail-prices.json     # 30-day retail prices + outages by state
-└── suppliers.json         # Asian supplier data + domestic refineries
+├── snapshot.json            # Latest key metrics (MSO: weekly manual; oil/retail: daily automated)
+├── stocks-history.json      # 12-week petrol & diesel stock trends
+├── oil-prices.json          # 30-day Brent crude prices + events (auto-updated daily)
+├── retail-prices.json       # 30-day retail prices by fuel type (auto-updated daily)
+├── suppliers.json           # Asian supplier data + domestic refineries
+├── demand.json              # Weekly petrol & diesel demand (stub — AIP Weekly)
+├── global-status.json       # Hormuz status, IEA release details
+├── import-sources.json      # Import share by country (yearly)
+├── outages.json             # Station outages by state
+├── price-decomposition.json # Retail price breakdown (excise, crude, margin, etc.)
+├── refinery-history.json    # Domestic refinery closures history
+├── shipping.json            # Ship cancellations data
+└── timeline.json            # Crisis timeline events (auto-updated daily from ABC News RSS)
 ```
 
 **Live APIs:**
-- `/api/oil-price` — Proxies Brent crude price from OilPriceAPI (15-min cache)
+- `/api/oil-price` — Proxies Brent crude price from OilPriceAPI (15-min in-memory cache + CDN)
 - `/api/fuel-prices` — Proxies NSW FuelCheck API for live retail prices (1-hour cache)
+- `/api/kalshi` — Fetches Hormuz prediction market odds from Kalshi (1-hour cache + 30-day history)
+- `/api/news` — Aggregates ABC News + Reuters RSS feeds (6-hour cache, top 20 items)
+- `/api/submit-issue` — Accepts POST to create GitHub Issues (bug/feedback forms)
 
-**Static data** (updated via GitHub commits):
-- MSO weekly data (DCCEEW)
+**Automated data updates (GitHub Actions):**
+- `update-oil-price.yml` — Daily 7pm AEST: fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
+- `update-retail-prices.yml` — Daily 6am AEST: fetches NSW FuelCheck averages, updates `retail-prices.json` + `snapshot.json`
+- `update-timeline.yml` — Daily 8am AEST: fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
+- `update-snapshot-data.yml` — Every Friday 9am AEST: runs `scripts/update-snapshot.js` *(stub — not yet implemented)*
+
+**Manual update required:**
+- MSO weekly data (DCCEEW) — copy from Friday report into `snapshot.json`
 - JODI international refinery stocks (monthly)
-- Australian Petroleum Statistics (monthly)
+- Station outages, shipping disruptions, import share
 
 ---
 
