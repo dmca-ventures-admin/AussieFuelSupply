@@ -26,7 +26,7 @@ import type {
   ShippingData,
   TimelineData,
   PriceDecompositionData,
-  RefineryHistory,
+
   GlobalStatusData,
   DemandData,
 } from "@/lib/types";
@@ -46,7 +46,7 @@ interface DashboardData {
   shipping: ShippingData;
   timeline: TimelineData;
   priceDecomposition: PriceDecompositionData;
-  refineryHistory: RefineryHistory;
+
   globalStatus: GlobalStatusData;
   demand: DemandData;
 }
@@ -1236,19 +1236,19 @@ export default function Home() {
         const files = [
           "snapshot.json", "stocks-history.json", "oil-prices.json", "retail-prices.json",
           "suppliers.json", "outages.json", "import-sources.json", "shipping.json",
-          "timeline.json", "price-decomposition.json", "refinery-history.json", "global-status.json",
+          "timeline.json", "price-decomposition.json", "global-status.json",
           "demand.json",
         ];
         const responses = await Promise.all(files.map((f) => fetch(`/data/${f}`)));
         const [
           snapshot, stocksHistory, oilPrices, retailPrices, suppliers, outages,
-          importSources, shipping, timeline, priceDecomposition, refineryHistory, globalStatus,
+          importSources, shipping, timeline, priceDecomposition, globalStatus,
           demand,
         ] = await Promise.all(responses.map((r) => r.json()));
 
         setData({
           snapshot, stocksHistory, oilPrices, retailPrices, suppliers, outages,
-          importSources, shipping, timeline, priceDecomposition, refineryHistory, globalStatus,
+          importSources, shipping, timeline, priceDecomposition, globalStatus,
           demand,
         });
       } catch (error) {

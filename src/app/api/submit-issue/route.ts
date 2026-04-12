@@ -1,5 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// In-memory rate limiting: max 3 submissions per IP per hour
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const timestamps = (rateLimitMap.get(ip) ?? []).filter(
+    (t) => now - t < RATE_LIMIT_WINDOW_MS
+  );
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    rateLimitMap.set(ip, timestamps);
+    return { allowed: false, remaining: 0 };
+  }
+  timestamps.push(now);
+  rateLimitMap.set(ip, timestamps);
+  return { allowed: true, remaining: RATE_LIMIT_MAX - timestamps.length };
+}
+
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = "dmca-ventures-admin";
 const REPO_NAME = "AussieFuelSupply";
@@ -10,6 +37,23 @@ const LABEL_CONFIG = {
 };
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const { allowed, remaining } = checkRateLimit(ip);
+
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": "3600",
+          "X-RateLimit-Limit": String(RATE_LIMIT_MAX),
+          "X-RateLimit-Remaining": "0",
+        },
+      }
+    );
+  }
+
   try {
     const { type, email, message } = await request.json();
 
@@ -71,7 +115,15 @@ export async function POST(request: NextRequest) {
     }
 
     const issue = await res.json();
-    return NextResponse.json({ success: true, issueNumber: issue.number });
+    return NextResponse.json(
+      { success: true, issueNumber: issue.number },
+      {
+        headers: {
+          "X-RateLimit-Limit": String(RATE_LIMIT_MAX),
+          "X-RateLimit-Remaining": String(remaining),
+        },
+      }
+    );
   } catch (err) {
     console.error("submit-issue error:", err);
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
