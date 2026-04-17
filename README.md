@@ -82,12 +82,31 @@ Below the layer selector: a **Crisis Timeline** feed (ABC News RSS, filtered for
 - `update-oil-price.yml` — Daily 7pm AEST: fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
 - `update-retail-prices.yml` — Daily 6am AEST: fetches NSW FuelCheck averages, updates `retail-prices.json` + `snapshot.json`
 - `update-timeline.yml` — Daily 8am AEST: fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
-- `update-snapshot-data.yml` — Every Friday 9am AEST: runs `scripts/update-snapshot.js` *(stub — not yet implemented)*
+- `update-snapshot-data.yml` — Every Friday 9am AEST: runs `scripts/update-snapshot.js` — scrapes DCCEEW MSO statistics page and updates `snapshot.json` + `stocks-history.json`
 
 **Manual update required:**
-- MSO weekly data (DCCEEW) — copy from Friday report into `snapshot.json`
-- JODI international refinery stocks (monthly)
-- Station outages, shipping disruptions, import share
+- JODI international refinery stocks (monthly) — update `suppliers.json`
+- Station outages, shipping disruptions, import share — use `scripts/update-data.mjs` helper
+
+> **Note:** MSO weekly data is now automatically scraped from DCCEEW by `update-snapshot-data.yml` (Fridays). Manual update is only needed if the scraper fails.
+
+**Manual data update helper (`scripts/update-data.mjs`):**
+```bash
+# Update station outage data
+node scripts/update-data.mjs outages --state NSW --affected 320 --total 2417
+
+# Add a timeline event
+node scripts/update-data.mjs timeline --date 2026-04-18 --event "Event description" --source "Source name"
+
+# Update Hormuz status
+node scripts/update-data.mjs hormuz --status restricted --summary "Brief status summary"
+
+# Update ship cancellations
+node scripts/update-data.mjs ships --cancelled 8 --normal 81
+
+# Update MSO data manually (if scraper fails)
+node scripts/update-data.mjs mso --petrol_days 37 --diesel_days 29 --petrol_headroom 75 --diesel_headroom 16
+```
 
 ---
 
@@ -161,7 +180,7 @@ npm start
 - [ ] State-level stock breakdown
 - [ ] Jet fuel & LPG tracking
 - [ ] Price prediction model
-- [ ] Scheduled GitHub Actions to auto-update data files
+- [x] Scheduled GitHub Actions to auto-update data files (oil price, retail prices, timeline, MSO)
 - [ ] WA FuelWatch RSS integration
 - [ ] EV charging load and public transport surge data
 

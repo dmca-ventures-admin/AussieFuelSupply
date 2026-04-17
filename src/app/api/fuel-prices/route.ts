@@ -53,7 +53,6 @@ export async function GET() {
     let petrolCount = 0;
     let dieselSum = 0;
     let dieselCount = 0;
-    let stationsWithoutFuel = 0;
 
     if (Array.isArray(data?.prices)) {
       for (const entry of data.prices) {

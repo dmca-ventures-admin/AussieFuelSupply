@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import Footer from "@/components/Footer";
 import { DataMeta, SeverityBadge } from "@/components/ui";
-import { getDaysSupplyStatus, getStatusColor, getHormuzColor, formatLitres, formatCentsPerLitre, getRefineryUtilisationStatus } from "@/lib/utils";
+import { getDaysSupplyStatus, getStatusColor, formatCentsPerLitre, getRefineryUtilisationStatus } from "@/lib/utils";
 import type {
   Snapshot,
   StocksHistory,
