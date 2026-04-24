@@ -8,16 +8,16 @@ Real-time dashboard tracking Australia's fuel supply chain — from the Strait o
 
 ## 🔴 Live Status (As of snapshot — see `/public/data/snapshot.json`)
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| Petrol Supply | 38 days | 🟡 AMBER |
-| Diesel Supply | 30 days | 🟡 AMBER |
-| Brent Crude | updated daily via GitHub Actions | 🔴 RED |
-| Strait of Hormuz | Restricted | 🔴 RED |
-| Avg Petrol Price | updated daily via GitHub Actions | — |
-| Avg Diesel Price | updated daily via GitHub Actions | — |
+| Metric | Value | As of | Status |
+|--------|-------|-------|--------|
+| Petrol Supply | 38 days | 2026-03-28 | 🟡 AMBER |
+| Diesel Supply | 30 days | 2026-03-28 | 🟡 AMBER |
+| Brent Crude | $95.87/bbl | 2026-04-16 | 🔴 RED |
+| Strait of Hormuz | Restricted | 2026-03-28 | 🔴 RED |
+| Avg Petrol Price | 243.4¢/L | 2026-03-27 | 🔴 RED |
+| Avg Diesel Price | 260.0¢/L | 2026-03-27 | 🔴 RED |
 
-> Brent crude and retail prices are updated automatically each day via GitHub Actions. MSO stock levels require a manual update from the DCCEEW weekly report (Fridays).
+> Brent crude and retail prices are updated automatically each day via GitHub Actions. MSO stock levels (petrol/diesel days of supply) are automatically scraped from DCCEEW each Friday by `update-snapshot-data.yml`; manual update is only needed if the scraper fails.
 
 ---
 
@@ -56,7 +56,7 @@ Below the layer selector: a **Crisis Timeline** feed (ABC News RSS, filtered for
 
 ```
 /public/data/
-├── snapshot.json            # Latest key metrics (MSO: weekly manual; oil/retail: daily automated)
+├── snapshot.json            # Latest key metrics (MSO: weekly auto-scraped Fri; oil/retail: daily automated)
 ├── stocks-history.json      # 12-week petrol & diesel stock trends
 ├── oil-prices.json          # 30-day Brent crude prices + events (auto-updated daily)
 ├── retail-prices.json       # 30-day retail prices by fuel type (auto-updated daily)
@@ -73,22 +73,23 @@ Below the layer selector: a **Crisis Timeline** feed (ABC News RSS, filtered for
 
 **Live APIs:**
 - `/api/oil-price` — Proxies Brent crude price from OilPriceAPI (15-min in-memory cache + CDN)
-- `/api/fuel-prices` — Proxies NSW FuelCheck API for live retail prices (1-hour cache)
+- `/api/fuel-prices` — NSW FuelCheck API via OAuth2 client credentials; requires `NSW_FUEL_API_KEY` + `NSW_FUEL_API_SECRET`. Token cached in-memory; route response cached 1 hour via Next.js ISR (`revalidate = 3600`)
 - `/api/kalshi` — Fetches Hormuz prediction market odds from Kalshi (1-hour cache + 30-day history)
 - `/api/news` — Aggregates ABC News + Reuters RSS feeds (6-hour cache, top 20 items)
-- `/api/submit-issue` — Accepts POST to create GitHub Issues (bug/feedback forms)
+- `/api/submit-issue` — Accepts POST to create GitHub Issues (bug/feedback forms); requires `GITHUB_TOKEN`
 
 **Automated data updates (GitHub Actions):**
-- `update-oil-price.yml` — Daily 7pm AEST: fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
-- `update-retail-prices.yml` — Daily 6am AEST: fetches NSW FuelCheck averages, updates `retail-prices.json` + `snapshot.json`
-- `update-timeline.yml` — Daily 8am AEST: fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
-- `update-snapshot-data.yml` — Every Friday 9am AEST: runs `scripts/update-snapshot.js` — scrapes DCCEEW MSO statistics page and updates `snapshot.json` + `stocks-history.json`
+
+All workflows load secrets via Doppler (`DOPPLER_TOKEN` must be set as a GitHub repository secret).
+
+- `update-oil-price.yml` — Daily 7pm AEST (08:00 UTC): fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
+- `update-retail-prices.yml` — Daily 6am AEST (20:00 UTC previous day): obtains NSW FuelCheck OAuth2 token, fetches current prices, updates `retail-prices.json` + `snapshot.json`
+- `update-timeline.yml` — Daily 8am AEST (22:00 UTC previous day): fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
+- `update-snapshot-data.yml` — Every Friday 9am AEST (23:00 UTC Thursday): runs `scripts/update-snapshot.js` — scrapes DCCEEW MSO statistics page and updates `snapshot.json` + `stocks-history.json`
 
 **Manual update required:**
 - JODI international refinery stocks (monthly) — update `suppliers.json`
 - Station outages, shipping disruptions, import share — use `scripts/update-data.mjs` helper
-
-> **Note:** MSO weekly data is now automatically scraped from DCCEEW by `update-snapshot-data.yml` (Fridays). Manual update is only needed if the scraper fails.
 
 **Manual data update helper (`scripts/update-data.mjs`):**
 ```bash
@@ -124,17 +125,25 @@ npm install
 
 ### Environment Variables
 
-Create a `.env.local` file:
+Secrets are managed in [Doppler](https://doppler.com), project `aussiefuelsupply`. Scope this directory once:
 
-```env
-NSW_FUEL_API_KEY=your_key_here       # From api.nsw.gov.au
-OIL_PRICE_API_TOKEN=your_token_here  # From oilpriceapi.com
+```bash
+doppler setup --project aussiefuelsupply --config dev
 ```
+
+Required secrets (already populated in the Doppler `prd` config; mirror to `dev` as needed):
+
+- `NSW_FUEL_API_KEY` — consumer key from api.nsw.gov.au
+- `NSW_FUEL_API_SECRET` — consumer secret from api.nsw.gov.au (OAuth2 client credentials)
+- `OIL_PRICE_API_TOKEN` — from oilpriceapi.com
+- `GITHUB_TOKEN` — GitHub personal access token (for `/api/submit-issue` to create issues)
+
+For GitHub Actions to work, `DOPPLER_TOKEN` must also be set as a repository secret in GitHub Settings → Secrets and variables → Actions.
 
 ### Run
 
 ```bash
-npm run dev
+doppler run -- npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
