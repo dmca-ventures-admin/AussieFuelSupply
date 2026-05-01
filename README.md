@@ -17,7 +17,7 @@ Real-time dashboard tracking Australia's fuel supply chain — from the Strait o
 | Avg Petrol Price | 243.4¢/L | 2026-03-27 | 🔴 RED |
 | Avg Diesel Price | 260.0¢/L | 2026-03-27 | 🔴 RED |
 
-> Brent crude and retail prices are updated automatically each day via GitHub Actions. MSO stock levels (petrol/diesel days of supply) are automatically scraped from DCCEEW each Friday by `update-snapshot-data.yml`; manual update is only needed if the scraper fails.
+> These values are read directly from `public/data/snapshot.json`. Brent crude and retail prices are updated automatically each day via GitHub Actions. MSO stock levels (petrol/diesel days of supply) are automatically scraped from DCCEEW each Friday by `update-snapshot-data.yml`; if the scraper fails use `scripts/update-data.mjs mso` to update manually.
 
 ---
 
@@ -80,9 +80,9 @@ Below the layer selector: a **Crisis Timeline** feed (ABC News RSS, filtered for
 
 **Automated data updates (GitHub Actions):**
 
-All workflows load secrets via Doppler (`DOPPLER_TOKEN` must be set as a GitHub repository secret).
+`update-oil-price.yml` and `update-retail-prices.yml` load secrets via Doppler (`DOPPLER_TOKEN` must be set as a GitHub repository secret). `update-timeline.yml` and `update-snapshot-data.yml` require no secrets.
 
-- `update-oil-price.yml` — Daily 7pm AEST (08:00 UTC): fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
+- `update-oil-price.yml` — Daily 6pm AEST / 7pm AEDT (08:00 UTC): fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
 - `update-retail-prices.yml` — Daily 6am AEST (20:00 UTC previous day): obtains NSW FuelCheck OAuth2 token, fetches current prices, updates `retail-prices.json` + `snapshot.json`
 - `update-timeline.yml` — Daily 8am AEST (22:00 UTC previous day): fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
 - `update-snapshot-data.yml` — Every Friday 9am AEST (23:00 UTC Thursday): runs `scripts/update-snapshot.js` — scrapes DCCEEW MSO statistics page and updates `snapshot.json` + `stocks-history.json`
@@ -183,13 +183,18 @@ npm start
 
 ---
 
-## 🗺️ Roadmap (v2)
+## 🗺️ Roadmap
 
+- [x] 4-layer accordion dashboard (Domestic → Supply Chain → Global → Prediction Markets)
+- [x] Scheduled GitHub Actions to auto-update data files (oil price, retail prices, timeline, MSO)
+- [x] Kalshi prediction market odds (3 date ranges, 30-day sparklines)
+- [x] Double Hop animated SVG supply chain map with fullscreen modal
+- [x] Crisis Timeline feed (ABC News RSS, auto-filtered)
+- [x] Bug/feedback forms submitting to GitHub Issues
 - [ ] Tanker tracking (AIS data from MarineTraffic)
 - [ ] State-level stock breakdown
 - [ ] Jet fuel & LPG tracking
 - [ ] Price prediction model
-- [x] Scheduled GitHub Actions to auto-update data files (oil price, retail prices, timeline, MSO)
 - [ ] WA FuelWatch RSS integration
 - [ ] EV charging load and public transport surge data
 
