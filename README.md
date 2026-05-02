@@ -83,9 +83,11 @@ Below the layer selector: a **Crisis Timeline** feed (ABC News RSS, filtered for
 `update-oil-price.yml` and `update-retail-prices.yml` load secrets via Doppler (`DOPPLER_TOKEN` must be set as a GitHub repository secret). `update-timeline.yml` and `update-snapshot-data.yml` require no secrets.
 
 - `update-oil-price.yml` — Daily 6pm AEST / 7pm AEDT (08:00 UTC): fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
-- `update-retail-prices.yml` — Daily 6am AEST (20:00 UTC previous day): obtains NSW FuelCheck OAuth2 token, fetches current prices, updates `retail-prices.json` + `snapshot.json`
-- `update-timeline.yml` — Daily 8am AEST (22:00 UTC previous day): fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
-- `update-snapshot-data.yml` — Every Friday 9am AEST (23:00 UTC Thursday): runs `scripts/update-snapshot.js` — scrapes DCCEEW MSO statistics page and updates `snapshot.json` + `stocks-history.json`
+- `update-retail-prices.yml` — Daily 6am AEST / 7am AEDT (20:00 UTC): obtains NSW FuelCheck OAuth2 token, fetches current prices, updates `retail-prices.json` + `snapshot.json`
+- `update-timeline.yml` — Daily 8am AEST / 9am AEDT (22:00 UTC): fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
+- `update-snapshot-data.yml` — Every Friday 9am AEST / 10am AEDT (23:00 UTC Thursday): runs `scripts/update-snapshot.js` — scrapes DCCEEW MSO statistics page and updates `snapshot.json` + `stocks-history.json`
+
+All four workflows also support **manual triggering** via GitHub → Actions → select workflow → "Run workflow".
 
 **Manual update required:**
 - JODI international refinery stocks (monthly) — update `suppliers.json`
