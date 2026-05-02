@@ -80,10 +80,10 @@ Below the layer selector: a **Crisis Timeline** feed (ABC News RSS, filtered for
 
 **Automated data updates (GitHub Actions):**
 
-`update-oil-price.yml` and `update-retail-prices.yml` load secrets via Doppler (`DOPPLER_TOKEN` must be set as a GitHub repository secret). `update-timeline.yml` and `update-snapshot-data.yml` require no secrets.
+`update-oil-price.yml` requires `OIL_PRICE_API_TOKEN` as a GitHub repository secret. `update-retail-prices.yml` requires `NSW_FUEL_API_KEY` as a GitHub repository secret. `update-timeline.yml` and `update-snapshot-data.yml` require no secrets.
 
 - `update-oil-price.yml` — Daily 6pm AEST / 7pm AEDT (08:00 UTC): fetches Brent crude from OilPriceAPI, updates `oil-prices.json` + `snapshot.json`
-- `update-retail-prices.yml` — Daily 6am AEST / 7am AEDT (20:00 UTC): obtains NSW FuelCheck OAuth2 token, fetches current prices, updates `retail-prices.json` + `snapshot.json`
+- `update-retail-prices.yml` — Daily 6am AEST / 7am AEDT (20:00 UTC): fetches NSW FuelCheck prices via API key, updates `retail-prices.json` + `snapshot.json`
 - `update-timeline.yml` — Daily 8am AEST / 9am AEDT (22:00 UTC): fetches ABC News RSS, filters for fuel/energy keywords, appends to `timeline.json`
 - `update-snapshot-data.yml` — Every Friday 9am AEST / 10am AEDT (23:00 UTC Thursday): runs `scripts/update-snapshot.js` — scrapes DCCEEW MSO statistics page and updates `snapshot.json` + `stocks-history.json`
 
@@ -140,7 +140,7 @@ Required secrets (already populated in the Doppler `prd` config; mirror to `dev`
 - `OIL_PRICE_API_TOKEN` — from oilpriceapi.com
 - `GITHUB_TOKEN` — GitHub personal access token (for `/api/submit-issue` to create issues)
 
-For GitHub Actions to work, `DOPPLER_TOKEN` must also be set as a repository secret in GitHub Settings → Secrets and variables → Actions.
+For GitHub Actions to work, `OIL_PRICE_API_TOKEN` and `NSW_FUEL_API_KEY` must be set as repository secrets in GitHub Settings → Secrets and variables → Actions. (Doppler is only used for local development, not in CI.)
 
 ### Run
 
