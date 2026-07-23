@@ -16,9 +16,9 @@
     "iea_actual_days": 55
   },
   "global": {
-    "brent_crude_usd": 94.85,
+    "brent_crude_usd": 98.21,
     "brent_source": "ICE Futures via Investing.com",
-    "brent_as_of": "2026-07-22",
+    "brent_as_of": "2026-07-23",
     "hormuz_status": "restricted",
     "hormuz_source": "Reuters / CENTCOM",
     "hormuz_as_of": "2026-03-28",
