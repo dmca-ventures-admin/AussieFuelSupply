@@ -18,7 +18,7 @@
   "global": {
     "brent_crude_usd": 94.97,
     "brent_source": "ICE Futures via Investing.com",
-    "brent_as_of": "2026-09-04",
+    "brent_as_of": "2026-09-05",
     "hormuz_status": "restricted",
     "hormuz_source": "Reuters / CENTCOM",
     "hormuz_as_of": "2026-03-28",
